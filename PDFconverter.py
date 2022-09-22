@@ -9,7 +9,7 @@ def convert(file, outputDir):
     if not os.path.exists(outputDir):
         os.makedirs(outputDir)
 
-    pages = convert_from_path(file, 500)
+    pages = convert_from_path(file, 500, size=(1280, 720))
     count = 1
     for page in pages:
         myFile = outputDir + 'out_img' + str(count) + '.jpg'
