@@ -3,6 +3,9 @@ from pdf2image import convert_from_path
 from tkinter import *
 from tkinter import messagebox
 from tkinter import  filedialog
+import os
+import shutil
+
 
 root = Tk()
 root.title("PDF to JPEG")
@@ -10,7 +13,8 @@ root.geometry('420x170')
 root.config(bg='#FCF3CF')
 
 
-outputDir = "Slides/"
+outputDir = "temp/"
+filepath = None
 
 def pdf2jpg():
     try:
@@ -27,7 +31,7 @@ def pdf2jpg():
         Result = "Enter pdf file path"
         messagebox.showinfo("Result", Result)
     else:
-        Result = "Successful"
+        Result = "pdf loaded correctly"
         messagebox.showinfo("Result", Result)
 
 
@@ -37,6 +41,13 @@ def openFile():
     print(filepath)
     enter_path.insert(0, filepath)
 
+
+
+def on_closing():
+    if messagebox.askyesnocancel("Yes", "Do you want to save the presentation??"):
+        #elimino l'intera cartella temporanea
+        shutil.rmtree(outputDir)
+        root.destroy()
 
 
 
@@ -51,8 +62,9 @@ btn = Button(root, text="Convert", relief=RAISED, borderwidth=2, font=('popins',
 btn.place(x=150, y=100)
 button = Button(root, text="Open", relief=RAISED, borderwidth=2, font=('popins', 10, 'bold'), bg='#FCF3CF', fg="black", cursor="hand2", command=openFile)
 button.place(x = 320, y = 50)
+#creo la cartella temporanea
+os.mkdir('temp')
 
-
-
-
+#protocollo che serve per gestire il pulsante X di chiusura
+root.protocol("WM_DELETE_WINDOW", on_closing)
 root.mainloop()
