@@ -13,7 +13,8 @@ root.geometry('420x170')
 root.config(bg='#FCF3CF')
 
 
-outputDir = "temp/"
+tempDir = "temp/"
+savedSlidesDir = "SavedSlides/"
 filepath = None
 
 def pdf2jpg():
@@ -24,7 +25,7 @@ def pdf2jpg():
         pages = convert_from_path(pdf_path=str(enter_path.get()), dpi=200, poppler_path=poppler_path, size=(1280, 720))
         count = 1
         for page in pages:
-            myFile = outputDir + 'out_img' + str(count) + '.jpg'
+            myFile = tempDir + 'out_img' + str(count) + '.jpg'
             count += 1
             page.save(myFile, "JPEG")
     except:
@@ -35,7 +36,7 @@ def pdf2jpg():
         messagebox.showinfo("Result", Result)
 
 
-
+#funzione che serve per cercare un file nel file system e prenderne il path
 def openFile():
     filepath = filedialog.askopenfilename()
     print(filepath)
@@ -43,11 +44,39 @@ def openFile():
 
 
 
+def deleteAllTmpFile():
+    #path = r"E:\demos\files\reports\\"
+    for file_name in os.listdir(tempDir):
+        # construct full file path
+        file = tempDir + file_name
+        if os.path.isfile(file):
+            print('Deleting file:', file)
+            os.remove(file)
+
+
+def savedSlide():
+    for file_name in os.listdir(tempDir):
+        file = tempDir + file_name
+        if os.path.isfile(file):
+            print('Moving file:', file)
+            #sposto le slide nella cartella corretta
+            shutil.move(file, savedSlidesDir)
+        else:
+            print("File not found", file)
+
+
 def on_closing():
-    if messagebox.askyesnocancel("Yes", "Do you want to save the presentation??"):
-        #elimino l'intera cartella temporanea
-        shutil.rmtree(outputDir)
+    res = messagebox.askyesnocancel("Close", "Do you want to save the presentation??")
+    #voglismo chiudere l'applicazione conservando le modifiche
+    if res == True:
+        savedSlide()
         root.destroy()
+    #vogliamo chiudere l'applicazione senza conservare le modifiche
+    elif res == False:
+        #elimino l'intera cartella temporanea
+        deleteAllTmpFile()
+        root.destroy()
+
 
 
 
@@ -62,8 +91,6 @@ btn = Button(root, text="Convert", relief=RAISED, borderwidth=2, font=('popins',
 btn.place(x=150, y=100)
 button = Button(root, text="Open", relief=RAISED, borderwidth=2, font=('popins', 10, 'bold'), bg='#FCF3CF', fg="black", cursor="hand2", command=openFile)
 button.place(x = 320, y = 50)
-#creo la cartella temporanea
-os.mkdir('temp')
 
 #protocollo che serve per gestire il pulsante X di chiusura
 root.protocol("WM_DELETE_WINDOW", on_closing)
