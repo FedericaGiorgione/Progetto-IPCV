@@ -22,7 +22,7 @@ detector = HandDetector(detectionCon=0.8, maxHands=1)
 gestureThreshold = 300  # soglia sopra la quale considerare un movimento come gesture
 buttonPressed = False
 buttonCounter = 0
-buttonDelay = 20  # delay di pressione del bottone (ovvero per quanti frame una gesture è valida prima che venga rilevata nuovamente)
+buttonDelay = 15  # delay di pressione del bottone (ovvero per quanti frame una gesture è valida prima che venga rilevata nuovamente)
 
 smoothening = 2  # alto -> cursore lento, basso -> cursore tremolante
 pLocX, pLocY = 0, 0
