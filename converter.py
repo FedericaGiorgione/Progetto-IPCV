@@ -1,14 +1,15 @@
-poppler_path = r"C:\ProgramData\poppler-22.04.0\Library\bin"
+poppler_path = r"poppler-22.04.0\Library\bin"
 from pdf2image import convert_from_path
 from tkinter import *
 from tkinter import messagebox
 from tkinter import  filedialog
 import os
 import shutil
+from PIL import Image
 
 
 root = Tk()
-root.title("PDF to JPEG")
+root.title("Support++")
 root.geometry('420x170')
 root.config(bg='#FCF3CF')
 
@@ -55,14 +56,38 @@ def deleteAllTmpFile():
 
 
 def savedSlide():
+    jpg2pdf()
     for file_name in os.listdir(tempDir):
+        # construct full file path
         file = tempDir + file_name
         if os.path.isfile(file):
-            print('Moving file:', file)
-            #sposto le slide nella cartella corretta
-            shutil.move(file, savedSlidesDir)
-        else:
-            print("File not found", file)
+            print('Deleting file:', file)
+            os.remove(file)
+
+
+
+def jpg2pdf():
+    image_list = []
+    count = 0
+    for image in os.listdir(tempDir):
+        count += 1
+
+    if count != 0:
+        image = Image.open(tempDir + 'out_img1.jpg')
+        image = image.convert('RGB')
+    aux = 2
+    while aux <= count:
+        imageAux = Image.open(tempDir + 'out_img' + str(aux) + '.jpg')
+        imageAux = imageAux.convert('RGB')
+        image_list.append(imageAux)
+        aux += 1
+
+    count = 0
+    for pdf in os.listdir(savedSlidesDir):
+        count += 1
+
+    image.save(savedSlidesDir + 'savedSlides' + str(count) + '.pdf', save_all =True, append_images=image_list)
+
 
 
 def on_closing():
@@ -80,7 +105,7 @@ def on_closing():
 
 
 
-Label(root, text="Convert PDF to JPEG", font=("Helvetica 15 bold"), fg="black", bg='#FCF3CF').pack(pady=10)
+Label(root, text="Load your PDF", font=("Helvetica 15 bold"), fg="black", bg='#FCF3CF').pack(pady=10)
 Label(root, text="File Location:", font=("Helvetica 10"), bg='#FCF3CF').place(x=20, y=55)
 
 enter_path = Entry(root, width=18, font=("poppins 15"), bg="white", border=3)
