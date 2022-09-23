@@ -54,7 +54,7 @@ def main():
         imgCurrent = cv2.imread(pathFullImgs)
         # imgCurrent = cv2.resize(imgCurrent, (width, height))  # resize a dimensione fissa
 
-        # Rileva la mano
+        # Rileva le mani
         hands, img = detector.findHands(img)
         cv2.line(img, (0, gestureThreshold), (width, gestureThreshold), (0, 255, 0), 5)
         cv2.rectangle(img, (width // 2, height - 200), (width-200, 200), (255, 255, 255), 2)  # ROI puntatore con mano destra
@@ -106,6 +106,8 @@ def main():
                 xValL = int(np.interp(lmListL[8][0], [200, width // 2], [0, width]))
                 yValL = int(np.interp(lmListL[8][1], [200, height - 200], [0, height]))
                 indexFingerL = xValL, yValL
+
+            # GESTURE A UNA MANO
 
             if rightHand:
                 if cyR <= gestureThreshold:
@@ -182,53 +184,56 @@ def main():
 
                 pLocX, pLocY = cLocX, cLocY
 
-            # Gesture 4 - Disegno (indice e medio)
-            if rightHand and fingersR == [0, 1, 1, 0, 0]:
-                cLocX = int(pLocX + (indexFingerR[0] - pLocX) / smoothening)
-                cLocY = int(pLocY + (indexFingerR[1] - pLocY) / smoothening)
-                indexFingerR = cLocX, cLocY
+            # GESTURE A DUE MANI
 
-                if annotationStart is False:
-                    annotationStart = True
-                    annotationCounter += 1
-                    annotations.append([])  # inizio un nuovo disegno
+            if rightHand and leftHand:
+                # Gesture 4 - Disegno (indice e seconda mano chiusa)
+                if fingersR == [0, 1, 0, 0, 0] and fingersL == [1, 1, 1, 1, 1]:
+                    cLocX = int(pLocX + (indexFingerR[0] - pLocX) / smoothening)
+                    cLocY = int(pLocY + (indexFingerR[1] - pLocY) / smoothening)
+                    indexFingerR = cLocX, cLocY
 
-                cv2.circle(imgCurrent, indexFingerR, 8, (0, 0, 255), cv2.FILLED)
-                annotations[annotationCounter].append(indexFingerR)
+                    if annotationStart is False:
+                        annotationStart = True
+                        annotationCounter += 1
+                        annotations.append([])  # inizio un nuovo disegno
 
-                pLocX, pLocY = cLocX, cLocY
+                    cv2.circle(imgCurrent, indexFingerR, 8, (0, 0, 255), cv2.FILLED)
+                    annotations[annotationCounter].append(indexFingerR)
 
-            elif leftHand and fingersL == [0, 1, 1, 0, 0]:
-                cLocX = int(pLocX + (indexFingerL[0] - pLocX) / smoothening)
-                cLocY = int(pLocY + (indexFingerL[1] - pLocY) / smoothening)
-                indexFingerL = cLocX, cLocY
+                    pLocX, pLocY = cLocX, cLocY
 
-                if annotationStart is False:
-                    annotationStart = True
-                    annotationCounter += 1
-                    annotations.append([])  # inizio un nuovo disegno
+                elif fingersL == [0, 1, 0, 0, 0] and fingersR == [1, 1, 1, 1, 1]:
+                    cLocX = int(pLocX + (indexFingerL[0] - pLocX) / smoothening)
+                    cLocY = int(pLocY + (indexFingerL[1] - pLocY) / smoothening)
+                    indexFingerL = cLocX, cLocY
 
-                cv2.circle(imgCurrent, indexFingerL, 8, (0, 0, 255), cv2.FILLED)
-                annotations[annotationCounter].append(indexFingerL)
+                    if annotationStart is False:
+                        annotationStart = True
+                        annotationCounter += 1
+                        annotations.append([])  # inizio un nuovo disegno
 
-                pLocX, pLocY = cLocX, cLocY
-            else:
-                annotationStart = False
+                    cv2.circle(imgCurrent, indexFingerL, 8, (0, 0, 255), cv2.FILLED)
+                    annotations[annotationCounter].append(indexFingerL)
 
-            # Gesture 5 - Cancella ultimo disegno (pollice, indice, medio)
-            if rightHand and fingersR == [1, 1, 1, 0, 0]:
-                if annotations:
-                    if annotationCounter >= 0:
-                        annotations.pop(-1)
-                        annotationCounter -= 1
-                        buttonPressed = True
+                    pLocX, pLocY = cLocX, cLocY
+                else:
+                    annotationStart = False
 
-            if leftHand and fingersL == [1, 1, 1, 0, 0]:
-                if annotations:
-                    if annotationCounter >= 0:
-                        annotations.pop(-1)
-                        annotationCounter -= 1
-                        buttonPressed = True
+                # Gesture 5 - Cancella ultimo disegno (indice, medio e seconda mano chiusa)
+                if fingersR == [1, 1, 0, 0, 0] and fingersL == [1, 1, 1, 1, 1]:
+                    if annotations:
+                        if annotationCounter >= 0:
+                            annotations.pop(-1)
+                            annotationCounter -= 1
+                            buttonPressed = True
+
+                if fingersL == [1, 1, 0, 0, 0] and fingersR == [1, 1, 1, 1, 1]:
+                    if annotations:
+                        if annotationCounter >= 0:
+                            annotations.pop(-1)
+                            annotationCounter -= 1
+                            buttonPressed = True
 
         else:
             annotationStart = False
@@ -242,6 +247,7 @@ def main():
         for i in range(len(annotations)):
             for j in range(len(annotations[i])):
                 if j != 0:
+                    print(len(annotationCounter), ' e ', annotations[i][j])
                     cv2.line(imgCurrent, annotations[i][j - 1], annotations[i][j], cColor,
                              5)  # disegna una linea tra ogni punto
 
