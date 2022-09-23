@@ -6,7 +6,7 @@ from tkinter import  filedialog
 import os
 import shutil
 from PIL import Image
-import zoom_2
+import  presentationController
 
 
 root = Tk()
@@ -34,7 +34,9 @@ def pdf2jpg():
     else:
         Result = "pdf loaded correctly"
         if messagebox.showinfo("Result", Result):
-            print("ok let's go")
+            #avviamo le slide
+            root.destroy()
+            presentationController.main()
 
 
 
@@ -120,7 +122,12 @@ btn.place(x=150, y=100)
 button = Button(root, text="Find", relief=RAISED, borderwidth=2, font=('popins', 10, 'bold'), bg='#FCF3CF', fg="black", cursor="hand2", command=openFile)
 button.place(x = 320, y = 50)
 
-#protocollo che serve per gestire il pulsante X di chiusura
-root.protocol("WM_DELETE_WINDOW", on_closing)
-root.mainloop()
+def main():
+    #protocollo che serve per gestire il pulsante X di chiusura
+    root.protocol("WM_DELETE_WINDOW", on_closing)
+    root.mainloop()
+
+
+if __name__ == "__main__":
+    main()
 
