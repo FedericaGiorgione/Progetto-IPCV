@@ -9,13 +9,15 @@ import numpy as np
 import os
 import closureController
 
+dictOfAnnotations = {}
+
 def main():
     # ---------VARIABILI---------
 
     width = 1280
     height = 720
-    folderPath = "Slides\\"
-    #folderPath = "temp\\"
+    #folderPath = "Slides\\"
+    folderPath = "temp\\"
     imgCount = 0
 
     n, m = 1, 1  # moltiplicatori per la dimensione delle slide
@@ -38,6 +40,9 @@ def main():
     annotationCounter = 0  # indice di disegno (altrimenti viene disegnata una linea tra ogni disegno)
     annotationStart = False  # flag per far partire un nuovo disegno
     cColor = (0, 0, 255)  # colore di disegno corrente
+
+
+
 
     # ---------------------------
 
@@ -118,14 +123,16 @@ def main():
                     # Gesture 1 - sinistra (pollice)
                     if fingersR == [1, 0, 0, 0, 0]:
                         annotationStart = False
-
                         # print("left")
                         if imgCount > 0:
                             buttonPressed = True
                             imgCount -= 1
-
-                            annotations = [[]]
-                            annotationCounter = 0
+                            if imgCount in dictOfAnnotations:
+                                annotations = dictOfAnnotations[imgCount]
+                                annotationCounter = len(dictOfAnnotations[imgCount])-1
+                            else:
+                                annotations = [[]]
+                                annotationCounter = 0
 
                     # Gesture 2 - destra (mignolo)
                     if fingersR == [0, 0, 0, 0, 1]:
@@ -136,8 +143,12 @@ def main():
                             buttonPressed = True
                             imgCount += 1
 
-                            annotations = [[]]
-                            annotationCounter = 0
+                            if imgCount in dictOfAnnotations:
+                                annotations = dictOfAnnotations[imgCount]
+                                annotationCounter = len(dictOfAnnotations[imgCount]) - 1
+                            else:
+                                annotations = [[]]
+                                annotationCounter = 0
             if leftHand:
                 if cyL <= gestureThreshold:
                     annotationStart = False
@@ -162,7 +173,6 @@ def main():
                         if imgCount < len(pathImgs) - 1:
                             buttonPressed = True
                             imgCount += 1
-
                             annotations = [[]]
                             annotationCounter = 0
 
@@ -189,7 +199,7 @@ def main():
             # GESTURE A DUE MANI
 
             if rightHand and leftHand:
-                # Gesture 4 - Disegno (indice e seconda mano chiusa)
+                # Gesture 4 - Disegno (indice e seconda mano aperta)
                 if fingersR == [0, 1, 0, 0, 0] and fingersL == [1, 1, 1, 1, 1]:
                     cLocX = int(pLocX + (indexFingerR[0] - pLocX) / smoothening)
                     cLocY = int(pLocY + (indexFingerR[1] - pLocY) / smoothening)
@@ -200,9 +210,12 @@ def main():
                         annotationStart = True
                         annotationCounter += 1
                         annotations.append([])  # inizio un nuovo disegno
+                        dictOfAnnotations[imgCount] = []
 
                     cv2.circle(imgCurrent, indexFingerR, 8, (0, 0, 255), cv2.FILLED)
                     annotations[annotationCounter].append(indexFingerR)
+                    dictOfAnnotations[imgCount] = annotations
+
 
                     pLocX, pLocY = cLocX, cLocY
 
@@ -215,29 +228,43 @@ def main():
                         annotationStart = True
                         annotationCounter += 1
                         annotations.append([])  # inizio un nuovo disegno
+                        dictOfAnnotations[imgCount] = annotations
 
                     cv2.circle(imgCurrent, indexFingerL, 8, (0, 0, 255), cv2.FILLED)
                     annotations[annotationCounter].append(indexFingerL)
+                    dictOfAnnotations[imgCount] = annotations
 
                     pLocX, pLocY = cLocX, cLocY
                 else:
                     annotationStart = False
 
-                # Gesture 5 - Cancella ultimo disegno (indice, medio e seconda mano chiusa)
-                if fingersR == [1, 1, 0, 0, 0] and fingersL == [1, 1, 1, 1, 1]:
+                # Gesture 5 - Cancella ultimo disegno (indice, medio, pollice e seconda mano aperta)
+                if fingersR == [1, 1, 1, 0, 0] and fingersL == [1, 1, 1, 1, 1]:
                     if annotations:
                         if annotationCounter >= 0:
                             annotations.pop(-1)
                             annotationCounter -= 1
+                            dictOfAnnotations[imgCount] = annotations
+                            print(dictOfAnnotations)
                             buttonPressed = True
 
-                if fingersL == [1, 1, 0, 0, 0] and fingersR == [1, 1, 1, 1, 1]:
+                if fingersL == [1, 1, 1, 0, 0] and fingersR == [1, 1, 1, 1, 1]:
                     if annotations:
                         if annotationCounter >= 0:
                             annotations.pop(-1)
                             annotationCounter -= 1
+                            dictOfAnnotations[imgCount] = annotations
+                            print(dictOfAnnotations)
                             buttonPressed = True
-
+                # Gesture 6 - Cancella tutti i disegni (entrmabi le amni aperte)
+                if fingersL == [1, 1, 1, 1, 1] and fingersR == [1, 1, 1, 1, 1]:
+                    if annotations:
+                        if annotationCounter > 0:
+                            annotations = [[]]
+                            annotationCounter = 0
+                            dictOfAnnotations[imgCount] = annotations
+                            print(dictOfAnnotations)
+                            buttonPressed = True
         else:
             annotationStart = False
 
@@ -250,9 +277,31 @@ def main():
         for i in range(len(annotations)):
             for j in range(len(annotations[i])):
                 if j != 0:
-                    print(annotationCounter, ' e ', annotations[i][j])
+                    #print(annotationCounter, ' e ', annotations[i][j])
                     cv2.line(imgCurrent, annotations[i][j - 1], annotations[i][j], cColor,
                              5)  # disegna una linea tra ogni punto
+
+        """
+        for i in range(len(annotations)):
+            for j in range(len(annotations[i])):
+                if j != 0:
+                    #print(annotationCounter, ' e ', annotations[i][j])
+                    cv2.line(imgCurrent, annotations[i][j - 1], annotations[i][j], cColor,
+                             5)  # disegna una linea tra ogni punto
+        """
+
+        if len(dictOfAnnotations) != 0:
+            if imgCount in dictOfAnnotations:
+                note = dictOfAnnotations[imgCount]
+                for i in range(len(note)):
+                    for j in range(len(note[i])):
+                        if j != 0:
+                            # print(annotationCounter, ' e ', annotations[i][j])
+                            cv2.line(imgCurrent, note[i][j - 1], note[i][j], cColor,
+                                     5)  # disegna una linea tra ogni punto
+
+
+
 
         # 2) Aggiungo la webcam nella schermata delle slide
         imageSmall = cv2.resize(img, (wSmall, hSmall))
@@ -274,6 +323,8 @@ def main():
         elif cv2.getWindowProperty("Image", cv2.WND_PROP_VISIBLE) < 1:
             closureController.closingApp()
             #break
+
+
 
     cv2.destroyAllWindows()
 
