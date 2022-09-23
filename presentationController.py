@@ -173,7 +173,7 @@ def main():
                 indexFingerR = cLocX, cLocY
 
                 cv2.circle(imgCurrent, indexFingerR, 8, (0, 0, 255), cv2.FILLED)
-                annotationStart = False
+                #annotationStart = False
 
                 pLocX, pLocY = cLocX, cLocY
             elif leftHand and fingersL == [0, 1, 0, 0, 0]:
@@ -182,7 +182,7 @@ def main():
                 indexFingerL = cLocX, cLocY
 
                 cv2.circle(imgCurrent, indexFingerL, 8, (0, 0, 255), cv2.FILLED)
-                annotationStart = False
+                #annotationStart = False
 
                 pLocX, pLocY = cLocX, cLocY
 
@@ -196,6 +196,7 @@ def main():
                     indexFingerR = cLocX, cLocY
 
                     if annotationStart is False:
+                        print('siamo dentro')
                         annotationStart = True
                         annotationCounter += 1
                         annotations.append([])  # inizio un nuovo disegno
@@ -249,7 +250,7 @@ def main():
         for i in range(len(annotations)):
             for j in range(len(annotations[i])):
                 if j != 0:
-                    print(len(annotationCounter), ' e ', annotations[i][j])
+                    print(annotationCounter, ' e ', annotations[i][j])
                     cv2.line(imgCurrent, annotations[i][j - 1], annotations[i][j], cColor,
                              5)  # disegna una linea tra ogni punto
 
