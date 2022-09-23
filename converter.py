@@ -56,57 +56,7 @@ def deleteAllTmpFile():
         if os.path.isfile(file):
             print('Deleting file:', file)
             os.remove(file)
-
-#funzione invocata se si decide di salvare
-def savedSlide():
-    jpg2pdf()
-    for file_name in os.listdir(tempDir):
-        # construct full file path
-        file = tempDir + file_name
-        #eliminiamo le immagini temporanee
-        if os.path.isfile(file):
-            print('Deleting file:', file)
-            os.remove(file)
-
-
-#funzione per convertire i jpg modificati in pdf e salvarli nell'apposita cartella
-def jpg2pdf():
-    image_list = []
-    count = 0
-    for image in os.listdir(tempDir):
-        count += 1
-
-    if count != 0:
-        image = Image.open(tempDir + 'out_img1.jpg')
-        image = image.convert('RGB')
-    aux = 2
-    while aux <= count:
-        imageAux = Image.open(tempDir + 'out_img' + str(aux) + '.jpg')
-        imageAux = imageAux.convert('RGB')
-        image_list.append(imageAux)
-        aux += 1
-
-    count = 0
-    for pdf in os.listdir(savedSlidesDir):
-        count += 1
-
-    image.save(savedSlidesDir + 'savedSlides' + str(count) + '.pdf', save_all =True, append_images=image_list)
-
-
-
-#funzione di conferma chiusura con possibilià di salvare/non salvare il lavoro
-def on_closing():
-    res = messagebox.askyesnocancel("Close", "Do you want to save the presentation??")
-    #voglismo chiudere l'applicazione conservando le modifiche
-    if res == True:
-        savedSlide()
-        root.destroy()
-    #vogliamo chiudere l'applicazione senza conservare le modifiche
-    elif res == False:
-        #elimino l'intera cartella temporanea
-        deleteAllTmpFile()
-        root.destroy()
-
+    root.destroy()
 
 
 #settaggio grafica pagina di caricamento pdf
@@ -124,7 +74,7 @@ button.place(x = 320, y = 50)
 
 def main():
     #protocollo che serve per gestire il pulsante X di chiusura
-    root.protocol("WM_DELETE_WINDOW", on_closing)
+    root.protocol("WM_DELETE_WINDOW", deleteAllTmpFile)
     root.mainloop()
 
 

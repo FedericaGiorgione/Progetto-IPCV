@@ -6,14 +6,16 @@ import os
 import cv2
 from cvzone.HandTrackingModule import HandDetector
 import numpy as np
+import os
+import closureController
 
 def main():
     # ---------VARIABILI---------
 
     width = 1280
     height = 720
-    #folderPath = "Slides\\"
-    folderPath = "temp\\"
+    folderPath = "Slides\\"
+    #folderPath = "temp\\"
     imgCount = 0
 
     n, m = 1, 1  # moltiplicatori per la dimensione delle slide
@@ -260,14 +262,19 @@ def main():
         cv2.imshow("Presentation", imgCurrent)
 
         key = cv2.waitKey(1)
+
+        #GESTIONE CHIUSURA FINESTRA
         if key == ord('q'):
-            break
-        if (cv2.getWindowProperty('Presentation', 0) < 0):
-            cv2.destroyAllWindows()
-            break
-        if (cv2.getWindowProperty('Image', 0) < 0):
-            cv2.destroyAllWindows()
-            break
+            closureController.closingApp()
+            #break
+        elif cv2.getWindowProperty("Presentation", cv2.WND_PROP_VISIBLE) < 1:
+            closureController.closingApp()
+            #break
+        elif cv2.getWindowProperty("Image", cv2.WND_PROP_VISIBLE) < 1:
+            closureController.closingApp()
+            #break
+
+    cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
