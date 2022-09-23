@@ -6,6 +6,7 @@ from tkinter import  filedialog
 import os
 import shutil
 from PIL import Image
+import zoom_2
 
 
 root = Tk()
@@ -18,11 +19,9 @@ tempDir = "temp/"
 savedSlidesDir = "SavedSlides/"
 filepath = None
 
+#funzione per convertire il pdf in immagine
 def pdf2jpg():
     try:
-        """images = convert_from_path(pdf_path=str(enter_path.get()), dpi=200, poppler_path=poppler_path)
-        for i in images:
-            i.save('output.jpg', 'JPEG')"""
         pages = convert_from_path(pdf_path=str(enter_path.get()), dpi=200, poppler_path=poppler_path, size=(1280, 720))
         count = 1
         for page in pages:
@@ -34,7 +33,9 @@ def pdf2jpg():
         messagebox.showinfo("Result", Result)
     else:
         Result = "pdf loaded correctly"
-        messagebox.showinfo("Result", Result)
+        if messagebox.showinfo("Result", Result):
+            print("ok let's go")
+
 
 
 #funzione che serve per cercare un file nel file system e prenderne il path
@@ -44,7 +45,7 @@ def openFile():
     enter_path.insert(0, filepath)
 
 
-
+#funzione invocata se si decide di non salvare, elimina le immagini temporanee che avevamo creato
 def deleteAllTmpFile():
     #path = r"E:\demos\files\reports\\"
     for file_name in os.listdir(tempDir):
@@ -54,18 +55,19 @@ def deleteAllTmpFile():
             print('Deleting file:', file)
             os.remove(file)
 
-
+#funzione invocata se si decide di salvare
 def savedSlide():
     jpg2pdf()
     for file_name in os.listdir(tempDir):
         # construct full file path
         file = tempDir + file_name
+        #eliminiamo le immagini temporanee
         if os.path.isfile(file):
             print('Deleting file:', file)
             os.remove(file)
 
 
-
+#funzione per convertire i jpg modificati in pdf e salvarli nell'apposita cartella
 def jpg2pdf():
     image_list = []
     count = 0
@@ -90,6 +92,7 @@ def jpg2pdf():
 
 
 
+#funzione di conferma chiusura con possibilià di salvare/non salvare il lavoro
 def on_closing():
     res = messagebox.askyesnocancel("Close", "Do you want to save the presentation??")
     #voglismo chiudere l'applicazione conservando le modifiche
@@ -104,7 +107,7 @@ def on_closing():
 
 
 
-
+#settaggio grafica pagina di caricamento pdf
 Label(root, text="Load your PDF", font=("Helvetica 15 bold"), fg="black", bg='#FCF3CF').pack(pady=10)
 Label(root, text="File Location:", font=("Helvetica 10"), bg='#FCF3CF').place(x=20, y=55)
 
@@ -112,11 +115,12 @@ enter_path = Entry(root, width=18, font=("poppins 15"), bg="white", border=3)
 enter_path.focus()
 enter_path.place(x=110, y=50)
 
-btn = Button(root, text="Convert", relief=RAISED, borderwidth=2, font=('popins', 10, 'bold'), bg='#FCF3CF', fg="black", cursor="hand2", command=pdf2jpg)
+btn = Button(root, text="Open", relief=RAISED, borderwidth=2, font=('popins', 10, 'bold'), bg='#FCF3CF', fg="black", cursor="hand2", command=pdf2jpg)
 btn.place(x=150, y=100)
-button = Button(root, text="Open", relief=RAISED, borderwidth=2, font=('popins', 10, 'bold'), bg='#FCF3CF', fg="black", cursor="hand2", command=openFile)
+button = Button(root, text="Find", relief=RAISED, borderwidth=2, font=('popins', 10, 'bold'), bg='#FCF3CF', fg="black", cursor="hand2", command=openFile)
 button.place(x = 320, y = 50)
 
 #protocollo che serve per gestire il pulsante X di chiusura
 root.protocol("WM_DELETE_WINDOW", on_closing)
 root.mainloop()
+
