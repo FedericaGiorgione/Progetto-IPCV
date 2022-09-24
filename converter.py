@@ -7,6 +7,7 @@ import os
 import shutil
 from PIL import Image
 import  presentationController
+from pdfrw import PdfReader
 
 
 root = Tk()
@@ -19,10 +20,24 @@ tempDir = "temp/"
 savedSlidesDir = "SavedSlides/"
 filepath = None
 
+
 #funzione per convertire il pdf in immagine
 def pdf2jpg():
+    pdf = PdfReader(enter_path.get())
+    x0, y0, x1, y1 = pdf.pages[0].MediaBox
+    x0 = float(x0)
+    x1 = float(x1)
+    y0 = float(y0)
+    y1 = float(y1)
+    width = x1 - x0
+    height = y1 - y0
+
+    width = int(width)
+    height = int(height)
+    print("dimensione pagina: ", width, height)
     try:
-        pages = convert_from_path(pdf_path=str(enter_path.get()), dpi=200, poppler_path=poppler_path, size=(1280, 720))
+        pages = convert_from_path(pdf_path=str(enter_path.get()), dpi=200, poppler_path=poppler_path,
+                                  size=(width, height))
         count = 1
         for page in pages:
             myFile = tempDir + 'out_img' + str(count) + '.jpg'
@@ -45,6 +60,7 @@ def openFile():
     filepath = filedialog.askopenfilename()
     print(filepath)
     enter_path.insert(0, filepath)
+
 
 
 #funzione invocata se si decide di non salvare, elimina le immagini temporanee che avevamo creato
@@ -76,6 +92,7 @@ def main():
     #protocollo che serve per gestire il pulsante X di chiusura
     root.protocol("WM_DELETE_WINDOW", deleteAllTmpFile)
     root.mainloop()
+
 
 
 if __name__ == "__main__":
