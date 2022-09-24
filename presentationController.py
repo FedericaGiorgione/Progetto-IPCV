@@ -16,8 +16,8 @@ def main():
 
     width = 1280
     height = 720
-    #folderPath = "Slides\\"
-    folderPath = "temp\\"
+    folderPath = "Slides\\"
+    #folderPath = "temp\\"
     imgCount = 0
 
     n, m = 1, 1  # moltiplicatori per la dimensione delle slide
@@ -41,7 +41,18 @@ def main():
     annotationStart = False  # flag per far partire un nuovo disegno
     cColor = (0, 0, 255)  # colore di disegno corrente
 
+    n, m = 1, 1  # moltiplicatori per la dimensione delle slide
+    # serve per salvare la distanza inziale fra le dita prima dello zoom
+    startDist = None
+    scale = 1
 
+    #conserviamo la posizione iniziale dell'indice se abbiamo zoom
+    startIndexPositionX = None
+    startIndexPositionY = None
+
+    #servono a capire quanto ci spostiamo sull'immagine zoomata
+    padX = 0
+    padY = 0
 
 
     # ---------------------------
@@ -126,6 +137,7 @@ def main():
                         # print("left")
                         if imgCount > 0:
                             buttonPressed = True
+                            scale = 1
                             imgCount -= 1
                             if imgCount in dictOfAnnotations:
                                 annotations = dictOfAnnotations[imgCount]
@@ -141,6 +153,7 @@ def main():
                         # print("right")
                         if imgCount < len(pathImgs) - 1:
                             buttonPressed = True
+                            scale = 1
                             imgCount += 1
 
                             if imgCount in dictOfAnnotations:
@@ -160,6 +173,7 @@ def main():
                         # print("left")
                         if imgCount > 0:
                             buttonPressed = True
+                            scale = 1
                             imgCount -= 1
 
                             annotations = [[]]
@@ -172,6 +186,7 @@ def main():
                         # print("right")
                         if imgCount < len(pathImgs) - 1:
                             buttonPressed = True
+                            scale = 1
                             imgCount += 1
                             annotations = [[]]
                             annotationCounter = 0
@@ -256,6 +271,7 @@ def main():
                             dictOfAnnotations[imgCount] = annotations
                             print(dictOfAnnotations)
                             buttonPressed = True
+
                 # Gesture 6 - Cancella tutti i disegni (entrmabi le amni aperte)
                 if fingersL == [1, 1, 1, 1, 1] and fingersR == [1, 1, 1, 1, 1]:
                     if annotations:
@@ -265,6 +281,22 @@ def main():
                             dictOfAnnotations[imgCount] = annotations
                             print(dictOfAnnotations)
                             buttonPressed = True
+
+                # Gesture 7 - Zoom
+                if fingersR == [1, 1, 0, 0, 0] and fingersL == [1, 1, 0, 0, 0]:
+                    if startDist is None:
+                        length, info, img = detector.findDistance(lmListR[8], lmListL[8], img)
+                        startDist = length
+
+                    length, info, img = detector.findDistance(lmListR[8], lmListL[8], img)
+                    scale = float((length - startDist) / 60)
+                    if scale > 4:
+                        scale = 4
+                    elif scale < 1:
+                        scale = 1
+                    # conserviamo il punto centrale della distanza fra gli indici
+                    # cx, cy = info[4:]
+                    print("fattore di scala: ", scale)
         else:
             annotationStart = False
 
@@ -300,13 +332,20 @@ def main():
                             cv2.line(imgCurrent, note[i][j - 1], note[i][j], cColor,
                                      5)  # disegna una linea tra ogni punto
 
+        imgCurrent = cv2.resize(imgCurrent, None, fx=scale, fy=scale)
 
-
+        # zoom dal centro
+        haux, waux, _ = imgCurrent.shape
+        zoomedImg = imgCurrent[haux // 2 - 360:haux // 2 + 360, waux // 2 - 640:waux // 2 + 640]
 
         # 2) Aggiungo la webcam nella schermata delle slide
         imageSmall = cv2.resize(img, (wSmall, hSmall))
-        h, w, _ = imgCurrent.shape
-        imgCurrent[0:hSmall, w - wSmall:w] = imageSmall
+        #h, w, _ = imgCurrent.shape
+        h, w, _ = zoomedImg.shape
+        zoomedImg[0:hSmall, w - wSmall:w] = imageSmall
+
+        imgCurrent = cv2.resize(zoomedImg, None, fx=1, fy=1)
+        imgCurrent[0:, 0:] = zoomedImg
 
         cv2.imshow("Image", img)
         cv2.imshow("Presentation", imgCurrent)
