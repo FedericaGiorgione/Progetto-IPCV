@@ -9,6 +9,9 @@ from PIL import Image
 import  presentationController
 from pdfrw import PdfReader
 
+import aspose.slides as slides
+import aspose.pydrawing as drawing
+
 
 root = Tk()
 root.title("Support++")
@@ -19,6 +22,17 @@ root.config(bg='#FCF3CF')
 tempDir = "temp/"
 savedSlidesDir = "SavedSlides/"
 filepath = None
+
+
+
+def pptx2jpg():
+    with slides.Presentation(enter_path.get()) as presentation:
+        for slide in presentation.slides:
+            slide.get_thumbnail(2, 2).save(tempDir + "presentation_slide_{0}.jpg".format(str(slide.slide_number)),
+                                           drawing.imaging.ImageFormat.jpeg)
+
+
+
 
 
 #funzione per convertire il pdf in immagine
