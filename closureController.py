@@ -1,5 +1,6 @@
 import cv2
 import os
+from os.path import exists
 from PIL import Image
 import ctypes
 import presentationController
@@ -10,7 +11,10 @@ savedSlidesDir = "SavedSlides/"
 filepath = None
 tempSavedDir = "tempSaved/"
 cColor = (0, 0, 255)
+#contiene il nome del pdf caricato, lo settiamo in converter.py
+nameOfPdf = None
 
+#serve per creare le nuove immagini con gli appunti inseriti sopra
 def addNote():
     arrayNote = presentationController.dictOfAnnotations
     print(arrayNote)
@@ -30,17 +34,26 @@ def addNote():
                         imgCurrent = cv2.line(imgCurrent, note[i][j - 1], note[i][j], cColor, 5)
         cv2.imwrite(tempSavedDir + 'out_img' + str(aux) + '.jpg', imgCurrent)
         aux += 1
-    jpg2pdf()
+    jpg2pdf(nameOfPdf)
 
 
 
 #funzione per convertire i jpg modificati in pdf e salvarli nell'apposita cartella
-def jpg2pdf():
+def jpg2pdf(pdf=nameOfPdf):
+    print('il nome del pdf è: ' + pdf)
     image_list = []
     count = 0
     for image in os.listdir(tempSavedDir):
         count += 1
 
+    file_exists = exists(savedSlidesDir + pdf)
+    aux = 0
+    while file_exists:
+        aux += 1
+        pdf = nameOfPdf[:-4] + '(' + str(aux) + ').pdf'
+        file_exists = exists(savedSlidesDir + pdf)
+
+    print(pdf)
     if count != 0:
         image = Image.open(tempSavedDir + 'out_img1.jpg')
         image = image.convert('RGB')
@@ -51,11 +64,7 @@ def jpg2pdf():
         image_list.append(imageAux)
         aux += 1
 
-    count = 0
-    for pdf in os.listdir(savedSlidesDir):
-        count += 1
-
-    image.save(savedSlidesDir + 'savedSlides' + str(count) + '.pdf', save_all =True, append_images=image_list)
+    image.save(savedSlidesDir + pdf, save_all =True, append_images=image_list)
 
 
 #funzione invocata se si decide di salvare
@@ -98,4 +107,6 @@ def closingApp():
     if res == 7:
         #stiamo premendo no
         deleteAllTmpFile()
+    else:
+        print(nameOfPdf)
     cv2.destroyAllWindows()

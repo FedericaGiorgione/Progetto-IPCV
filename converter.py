@@ -2,16 +2,11 @@ poppler_path = r"poppler-22.04.0\Library\bin"
 from pdf2image import convert_from_path
 from tkinter import *
 from tkinter import messagebox
-from tkinter import  filedialog
+from tkinter import filedialog
 import os
-import shutil
-from PIL import Image
 import  presentationController
 from pdfrw import PdfReader
-
-import aspose.slides as slides
-import aspose.pydrawing as drawing
-
+import  closureController
 
 root = Tk()
 root.title("Support++")
@@ -22,18 +17,7 @@ root.config(bg='#FCF3CF')
 tempDir = "temp/"
 savedSlidesDir = "SavedSlides/"
 filepath = None
-
-
-
-def pptx2jpg():
-    with slides.Presentation(enter_path.get()) as presentation:
-        for slide in presentation.slides:
-            slide.get_thumbnail(2, 2).save(tempDir + "presentation_slide_{0}.jpg".format(str(slide.slide_number)),
-                                           drawing.imaging.ImageFormat.jpeg)
-
-
-
-
+nameOfPdf = None
 
 #funzione per convertire il pdf in immagine
 def pdf2jpg():
@@ -62,6 +46,9 @@ def pdf2jpg():
         messagebox.showinfo("Result", Result)
     else:
         Result = "pdf loaded correctly"
+        #conserviano il nome del pdf nel caso in cui volessimo salvarlo alla chiusura
+        closureController.nameOfPdf = os.path.basename(enter_path.get())
+        print(closureController.nameOfPdf)
         if messagebox.showinfo("Result", Result):
             #avviamo le slide
             root.destroy()

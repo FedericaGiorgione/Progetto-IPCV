@@ -16,8 +16,8 @@ def main():
 
     width = 1280
     height = 720
-    folderPath = "Slides\\"
-    #folderPath = "temp\\"
+    #folderPath = "Slides\\"
+    folderPath = "temp\\"
     imgCount = 0
 
     n, m = 1, 1  # moltiplicatori per la dimensione delle slide
