@@ -8,8 +8,12 @@ from cvzone.HandTrackingModule import HandDetector
 import numpy as np
 import os
 import closureController
+import handwrittenRecognition
 
 dictOfAnnotations = {}
+
+########annotations number machine learning#####
+numberMl = []
 
 def main():
     # ---------VARIABILI---------
@@ -62,6 +66,10 @@ def main():
     #yellowIcon = cv2.resize(yellowIcon, None, fx=0.2, fy=0.2)
 
     changeColor = True
+
+
+
+
     ###############################################################################
 
 
@@ -254,9 +262,12 @@ def main():
                     cv2.circle(imgCurrent, indexFingerR, 8, (0, 0, 255), cv2.FILLED)
                     annotations[annotationCounter].append(indexFingerR)
                     dictOfAnnotations[imgCount] = annotations
-
-
                     pLocX, pLocY = cLocX, cLocY
+
+                    #########################################################################
+                    numberMl.append(indexFingerR)
+                    print(numberMl)
+                    #########################################################################
 
                 elif fingersL == [0, 1, 0, 0, 0] and fingersR == [1, 1, 1, 1, 1]:
                     cLocX = int(pLocX + (indexFingerL[0] - pLocX) / smoothening)
@@ -272,10 +283,20 @@ def main():
                     cv2.circle(imgCurrent, indexFingerL, 8, (0, 0, 255), cv2.FILLED)
                     annotations[annotationCounter].append(indexFingerL)
                     dictOfAnnotations[imgCount] = annotations
-
                     pLocX, pLocY = cLocX, cLocY
+
+                    #########################################################################
+                    numberMl.append(indexFingerR)
+                    print(numberMl)
+                    #########################################################################
                 else:
                     annotationStart = False
+                    #################PASSO IL VETTORE PER CREARE L'IMMAGINE E LEGGERE IL NUMERO###################
+                    if len(numberMl) != 0:
+                        handwrittenRecognition.note = numberMl
+                        handwrittenRecognition.createImg()
+                        numberMl.clear()
+                    #########################################################################
 
                 # Gesture 5 - Cancella ultimo disegno (indice, medio, pollice e seconda mano aperta)
                 if fingersR == [1, 1, 1, 0, 0] and fingersL == [1, 1, 1, 1, 1]:
@@ -284,7 +305,7 @@ def main():
                             annotations.pop(-1)
                             annotationCounter -= 1
                             dictOfAnnotations[imgCount] = annotations
-                            print(dictOfAnnotations)
+                            #print(dictOfAnnotations)
                             buttonPressed = True
 
                 if fingersL == [1, 1, 1, 0, 0] and fingersR == [1, 1, 1, 1, 1]:
@@ -293,7 +314,7 @@ def main():
                             annotations.pop(-1)
                             annotationCounter -= 1
                             dictOfAnnotations[imgCount] = annotations
-                            print(dictOfAnnotations)
+                            #print(dictOfAnnotations)
                             buttonPressed = True
 
                 # Gesture 6 - Cancella tutti i disegni (entrmabi le amni aperte)
@@ -416,7 +437,7 @@ def main():
         #inserimento camera
         backgroundImg[30:hSmall+30, 30:wSmall+30] = imageSmall
         auxY, auxX, _ = auxImgCurrent.shape
-        print(auxX, auxY)
+        #print(auxX, auxY)
 
         #inserimento immagine slide
         backgroundImg[100:auxY + 100, 300:auxX + 300] = auxImgCurrent
