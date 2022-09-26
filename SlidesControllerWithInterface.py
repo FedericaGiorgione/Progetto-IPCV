@@ -39,7 +39,31 @@ def main():
     annotations = [[]]
     annotationCounter = 0  # indice di disegno (altrimenti viene disegnata una linea tra ogni disegno)
     annotationStart = False  # flag per far partire un nuovo disegno
-    cColor = (0, 0, 255)  # colore di disegno corrente
+
+
+    #########################colori######################################
+    black = (0, 0, 0)
+    white = (255, 255, 255)
+    red = (0, 0, 255)
+    blue = (128, 0, 128)
+    yellow = (255, 255, 0)
+
+    cColor = red  # colore di disegno corrente
+
+    blackIcon = cv2.imread("image/black.png")
+    blackIcon = cv2.resize(blackIcon, None, fx=0.2, fy=0.2)
+    whiteIcon = cv2.imread("image/white.png")
+    whiteIcon = cv2.resize(whiteIcon, None, fx=0.2, fy=0.2)
+    redIcon = cv2.imread("image/red.png")
+    redIcon = cv2.resize(redIcon, None, fx=0.2, fy=0.2)
+    blueIcon = cv2.imread("image/blue.png")
+    blueIcon = cv2.resize(blueIcon, None, fx=0.2, fy=0.2)
+    #yellowIcon = cv2.imread("image/yellow.png")
+    #yellowIcon = cv2.resize(yellowIcon, None, fx=0.2, fy=0.2)
+
+    changeColor = True
+    ###############################################################################
+
 
     n, m = 1, 1  # moltiplicatori per la dimensione delle slide
     # serve per salvare la distanza inziale fra le dita prima dello zoom
@@ -197,7 +221,7 @@ def main():
                 cLocY = int(pLocY + (indexFingerR[1] - pLocY) / smoothening)
                 indexFingerR = cLocX, cLocY
 
-                cv2.circle(imgCurrent, indexFingerR, 8, (0, 0, 255), cv2.FILLED)
+                cv2.circle(imgCurrent, indexFingerR, 8, cColor, cv2.FILLED)
                 #annotationStart = False
 
                 pLocX, pLocY = cLocX, cLocY
@@ -206,7 +230,7 @@ def main():
                 cLocY = int(pLocY + (indexFingerL[1] - pLocY) / smoothening)
                 indexFingerL = cLocX, cLocY
 
-                cv2.circle(imgCurrent, indexFingerL, 8, (0, 0, 255), cv2.FILLED)
+                cv2.circle(imgCurrent, indexFingerL, 8, cColor, cv2.FILLED)
                 #annotationStart = False
 
                 pLocX, pLocY = cLocX, cLocY
@@ -297,6 +321,25 @@ def main():
                     # conserviamo il punto centrale della distanza fra gli indici
                     # cx, cy = info[4:]
                     print("fattore di scala: ", scale)
+
+                ####################gesture per cambio colore#######################################
+                if fingersR == [1, 1, 1, 0, 0] and fingersL == [1, 1, 1, 0, 0]:
+                    print("cambio colore")
+                    if changeColor:
+                        changeColor = False
+                        if cColor == red:
+                            cColor = blue
+                        elif cColor == blue:
+                            cColor = black
+                        elif cColor == black:
+                            cColor = white
+                        elif cColor == white:
+                            cColor = red
+                else:
+                    changeColor = True
+
+                ######################################################################################
+
         else:
             annotationStart = False
 
@@ -339,7 +382,7 @@ def main():
         haux, waux, _ = imgCurrent.shape
         zoomedImg = imgCurrent[haux // 2 - 360:haux // 2 + 360, waux // 2 - 640:waux // 2 + 640]
 
-###################################################################################
+#######################creazione immagine di sfondo e resize delle slide#################################
         auxZoomedImg = zoomedImg #1280x720
         auxImgCurrent = cv2.resize(auxZoomedImg, None, fx=0.7, fy=0.7) #640x360
 
@@ -366,17 +409,55 @@ def main():
 
 
 ###########################INTERFACCIA A TUTTO SCHERMO###############################################
-        backgroundImg = cv2.imread("Slides/background.jpg")
+        backgroundImg = cv2.imread("image/background.jpg")
 
         #imgResized = cv2.resize(auxZoomedImg, None, fx=0.2, fy=0.2)
+
+        #inserimento camera
         backgroundImg[30:hSmall+30, 30:wSmall+30] = imageSmall
         auxY, auxX, _ = auxImgCurrent.shape
         print(auxX, auxY)
+
+        #inserimento immagine slide
         backgroundImg[100:auxY + 100, 300:auxX + 300] = auxImgCurrent
 
 
+
+
+        #inserimento colori e bordo nel colore attivo
+        grey = (128,128,128)
+        if cColor == red:
+            # inserisco il bordo nel colore attivo
+            activeColor = cv2.copyMakeBorder(redIcon, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=grey)
+            backgroundImg[hSmall + 50: hSmall + 121, 50: 121] = activeColor
+        else:
+            backgroundImg[hSmall + 60: hSmall + 111, 60: 111] = redIcon
+
+        if cColor == blue:
+            # inserisco il bordo nel colore attivo
+            activeColor = cv2.copyMakeBorder(blueIcon, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=grey)
+            backgroundImg[hSmall + 50: hSmall + 121, wSmall - 51: wSmall + 20] = activeColor
+        else:
+            backgroundImg[hSmall + 60: hSmall + 111, wSmall - 41: wSmall + 10] = blueIcon
+
+        if cColor == black:
+            # inserisco il bordo nel colore attivo
+            activeColor = cv2.copyMakeBorder(blackIcon, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=grey)
+            backgroundImg[hSmall + 131: hSmall + 202, 50: 121] = activeColor
+        else:
+            backgroundImg[hSmall + 141: hSmall + 192, 60: 111] = blackIcon
+
+        if cColor == white:
+            # inserisco il bordo nel colore attivo
+            activeColor = cv2.copyMakeBorder(whiteIcon, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=grey)
+            backgroundImg[hSmall + 131: hSmall + 202, wSmall - 51: wSmall +20] = activeColor
+        else:
+            backgroundImg[hSmall + 141: hSmall + 192, wSmall - 41: wSmall + 10] = whiteIcon
+
+
+
         cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
-        cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        #cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         cv2.imshow("window", backgroundImg)
 
 
