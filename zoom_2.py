@@ -70,7 +70,7 @@ def main():
                     startDist = length
 
                 length, info, img = detector.findDistance(lmList1[8], lmList2[8], img)
-                scale = float((length - startDist) / 60)
+                scale = int((length - startDist) / 60)
                 if scale > 4:
                     scale = 4
                 elif scale < 1:
@@ -93,12 +93,13 @@ def main():
             """
             # gesture per movimento immagine se zoomata
             if detector.fingersUp(hands[0]) == [0, 1, 0, 0, 0] and scale > 1:
-                cx, cy = lmList[8][0], lmList[8][0]
+                cx, cy = lmList[8][0], lmList[8][1]
                 print("coordinate indice:", cx, cy)
             else:
                 cx = None
                 cy = None
 
+        #haux, waux, _ = actualImage.shape
         actualImage = cv2.resize(actualImage, None, fx=scale, fy=scale)
 
         #zoom in alto a sinsitra
@@ -108,59 +109,86 @@ def main():
         haux, waux, _ = actualImage.shape
         zoomedImg = actualImage[haux//2-360:haux//2+360, waux//2-640:waux//2+640]
 
+        print('haux= ', haux, 'waux= ',  waux)
+
+
         if cx != None:
-            if cy*scale - 360 < 0 and cx*scale - 640 < 0:
-                print("1")
-                print("gesture movimento zoom")
-                print(int(lmList[8][0] * scale), int(lmList[8][1] * scale))
+            print('cx s= ', cx * scale, 'cy s= ', cy * scale)
+            #530 > 640
+            if scale*cx > waux/4 and scale*cx < 3/4*waux and scale*cy > haux/4 and scale*cy < 3/4*haux:
+                print('ciao')
+                zoomedImg = actualImage[int(cy * scale) - 360:int(cy * scale) + 360,
+                            int(cx * scale) - 640:int(cx * scale) + 640]
+            elif scale*cx < waux/4 and scale*cy < haux/4:
                 zoomedImg = actualImage[0:720, 0:1280]
-            elif cy*scale - 360 < 0 and cx*scale + 640 > 1280:
-                print("2")
-                print("gesture movimento zoom")
-                print(int(lmList[8][0] * scale), int(lmList[8][1] * scale))
-                haux, waux, _ = actualImage.shape
-                zoomedImg = actualImage[0:720, waux - 1280:waux]
-            elif cy*scale + 360 > 720 and cx*scale - 640 < 0:
-                print("3")
-                print("gesture movimento zoom")
-                print(int(lmList[8][0] * scale), int(lmList[8][1] * scale))
-                haux, waux, _ = actualImage.shape
-                zoomedImg = actualImage[haux - 720:haux, 0:1280]
-            elif cy*scale + 360 > 720 and cx*scale + 640 > 1280:
-                print("4")
-                print("gesture movimento zoom")
-                print(int(lmList[8][0] * scale), int(lmList[8][1] * scale))
-                haux, waux, _ = actualImage.shape
-                zoomedImg = actualImage[haux - 720:haux, waux - 1280:waux]
-            elif cy*scale - 360 < 0:
-                print("5")
-                print("gesture movimento zoom")
-                print(int(lmList[8][0] * scale), int(lmList[8][1] * scale))
-                haux, waux, _ = actualImage.shape
-                zoomedImg = actualImage[0:720, int(cx * scale) - 640:int(cx * scale) + 640]
-            elif cy*scale + 360 > 720:
-                print("6")
-                print("gesture movimento zoom")
-                print(int(lmList[8][0] * scale), int(lmList[8][1] * scale))
-                haux, waux, _ = actualImage.shape
-                zoomedImg = actualImage[haux - 720:haux, int(cx * scale) - 640:int(cx * scale) + 640]
-            elif cx*scale - 640 < 0:
-                print("7")
-                print("gesture movimento zoom")
-                print(int(lmList[8][0] * scale), int(lmList[8][1] * scale))
-                haux, waux, _ = actualImage.shape
-                zoomedImg = actualImage[int(cy * scale) - 360:int(cy * scale) + 360, 0:1280]
-            elif cx*scale + 640 > 1280:
-                print("8")
-                print("gesture movimento zoom")
-                print(int(lmList[8][0] * scale), int(lmList[8][1] * scale))
-                haux, waux, _ = actualImage.shape
-                zoomedImg = actualImage[int(cy * scale) - 360:int(cy * scale) + 360, waux - 1280:waux]
-            else:
-                print("9")
-                print("gesture movimento zoom")
-                print(int(lmList[8][0] * scale), int(lmList[8][1] * scale))
-                zoomedImg = actualImage[int(cx * scale) - 360:int(cx * scale) + 360, int(cy * scale) - 640:int(cy * scale) + 640]
+            elif scale*cx < waux/4 and scale*cy > haux*3/4:
+                zoomedImg = actualImage[haux-720:haux, 0:1280]
+            elif scale*cx < waux/4:
+                zoomedImg = actualImage[int(scale*cy)-360:int(scale*cy)+360, 0:1280]
+            elif scale*cx > 3/4*waux and scale*cy < haux/4:
+                zoomedImg = actualImage[0:720, waux-1280:waux]
+            elif scale*cx > 3/4*waux and scale*cy > haux*3/4:
+                zoomedImg = actualImage[haux-720:haux, waux-1280:waux]
+            elif scale*cx > 3/4*waux:
+                zoomedImg = actualImage[int(scale*cy)-360: int(scale*cy)+360, waux-1280: waux]
+            elif scale*cy < haux/4:
+                zoomedImg = actualImage[0:720, int(scale*cx)-640: int(scale*cx)+640]
+            elif scale*cy > haux*3/4:
+                zoomedImg = actualImage[haux-720:haux, int(scale * cx) - 640: int(scale * cx) + 640]
+
+        # if cx != None:
+        #     if cy*scale - 360 < 0 and cx*scale - 640 < 0:
+        #         print("1")
+        #         print("gesture movimento zoom")
+        #         print(int(lmList[8][0] * scale), int(lmList[8][1] * scale))
+        #         zoomedImg = actualImage[0:720, 0:1280]
+        #     elif cy*scale - 360 < 0 and cx*scale + 640 > 1280:
+        #         print("2")
+        #         print("gesture movimento zoom")
+        #         print(int(lmList[8][0] * scale), int(lmList[8][1] * scale))
+        #         haux, waux, _ = actualImage.shape
+        #         zoomedImg = actualImage[0:720, waux - 1280:waux]
+        #     elif cy*scale + 360 > 720 and cx*scale - 640 < 0:
+        #         print("3")
+        #         print("gesture movimento zoom")
+        #         print(int(lmList[8][0] * scale), int(lmList[8][1] * scale))
+        #         haux, waux, _ = actualImage.shape
+        #         zoomedImg = actualImage[haux - 720:haux, 0:1280]
+        #     elif cy*scale + 360 > 720 and cx*scale + 640 > 1280:
+        #         print("4")
+        #         print("gesture movimento zoom")
+        #         print(int(lmList[8][0] * scale), int(lmList[8][1] * scale))
+        #         haux, waux, _ = actualImage.shape
+        #         zoomedImg = actualImage[haux - 720:haux, waux - 1280:waux]
+        #     elif cy*scale - 360 < 0:
+        #         print("5")
+        #         print("gesture movimento zoom")
+        #         print(int(lmList[8][0] * scale), int(lmList[8][1] * scale))
+        #         haux, waux, _ = actualImage.shape
+        #         zoomedImg = actualImage[0:720, int(cx * scale) - 640:int(cx * scale) + 640]
+        #     elif cy*scale + 360 > 720:
+        #         print("6")
+        #         print("gesture movimento zoom")
+        #         print(int(lmList[8][0] * scale), int(lmList[8][1] * scale))
+        #         haux, waux, _ = actualImage.shape
+        #         zoomedImg = actualImage[haux - 720:haux, int(cx * scale) - 640:int(cx * scale) + 640]
+        #     elif cx*scale - 640 < 0:
+        #         print("7")
+        #         print("gesture movimento zoom")
+        #         print(int(lmList[8][0] * scale), int(lmList[8][1] * scale))
+        #         haux, waux, _ = actualImage.shape
+        #         zoomedImg = actualImage[int(cy * scale) - 360:int(cy * scale) + 360, 0:1280]
+        #     elif cx*scale + 640 > 1280:
+        #         print("8")
+        #         print("gesture movimento zoom")
+        #         print(int(lmList[8][0] * scale), int(lmList[8][1] * scale))
+        #         haux, waux, _ = actualImage.shape
+        #         zoomedImg = actualImage[int(cy * scale) - 360:int(cy * scale) + 360, waux - 1280:waux]
+        #     else:
+        #         print("9")
+        #         print("gesture movimento zoom")
+        #         print(int(lmList[8][0] * scale), int(lmList[8][1] * scale))
+        #         zoomedImg = actualImage[int(cx * scale) - 360:int(cx * scale) + 360, int(cy * scale) - 640:int(cy * scale) + 640]
 
 
         #zoom con movimento che segue il centro fra gli indici

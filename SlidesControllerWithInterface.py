@@ -313,6 +313,7 @@ def main():
                     cv2.line(imgCurrent, annotations[i][j - 1], annotations[i][j], cColor,
                              5)  # disegna una linea tra ogni punto
 
+
         """
         for i in range(len(annotations)):
             for j in range(len(annotations[i])):
@@ -340,7 +341,7 @@ def main():
 
 ###################################################################################
         auxZoomedImg = zoomedImg #1280x720
-        auxImgCurrent = cv2.resize(auxZoomedImg, None, fx=0.5, fy=0.5) #640x360
+        auxImgCurrent = cv2.resize(auxZoomedImg, None, fx=0.7, fy=0.7) #640x360
 
 
 ###################################################################################
@@ -354,6 +355,9 @@ def main():
 
         imgCurrent = cv2.resize(zoomedImg, None, fx=1, fy=1)
         imgCurrent[0:, 0:] = zoomedImg
+
+        auxY, auxX, _ = auxImgCurrent.shape
+        imgCurrent[100:auxY + 100, 300:auxX + 300] = auxImgCurrent
 
         cv2.imshow("Image", img)
         cv2.imshow("Presentation", imgCurrent)
