@@ -117,8 +117,12 @@ def main():
 
             # ROI per il puntatore (metà destra schermo)
             if rightHand:
-                xValR = int(np.interp(lmListR[8][0], [width // 2, imgCurrent.shape[1]-200], [0, width]))
-                yValR = int(np.interp(lmListR[8][1], [200, height - 200], [0, height]))
+                if scale==1:
+                    xValR = int(np.interp(lmListR[8][0], [width // 2, imgCurrent.shape[1]-200], [0, width]))
+                    yValR = int(np.interp(lmListR[8][1], [200, height - 200], [0, height]))
+                else:
+                    xValR = int(np.interp(lmListR[8][0], [width // 2, imgCurrent.shape[1]-200], [int(padX/scale), int((padX-padXneg+width)/scale)]))
+                    yValR = int(np.interp(lmListR[8][1], [200, height - 200], [int(padY/scale), int((padY-padYneg+height)/scale)]))
                 indexFingerR = xValR, yValR
 
             # ROI per il puntatore (metà sinistra schermo)
@@ -404,8 +408,8 @@ def main():
         imageSmall = cv2.resize(img, (wSmall, hSmall))
         #h, w, _ = imgCurrent.shape
         h, w, _ = zoomedImg.shape
-        print(zoomedImg.shape)
-        print('scale: ', scale)
+        #print(zoomedImg.shape)
+        #print('scale: ', scale)
         zoomedImg[0:hSmall, w - wSmall:w] = imageSmall
 
         imgCurrent = cv2.resize(zoomedImg, None, fx=1, fy=1)
