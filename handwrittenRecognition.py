@@ -7,7 +7,7 @@ import SlidesControllerWithInterface
 
 
 tempDir = "temp/"
-tempSavedDir = "tempSaved/"
+tempSavedDir = "tempMl/"
 note = []
 
 
@@ -17,26 +17,15 @@ def createImg():
     print("disegno: ", note)
     print("salvataggio nuova foto")
     for i in range(len(note)):
-         print('salva salva')
-         for j in range(len(note[i])):
-             if j != 0:
-                 backgroundImg = cv2.line(backgroundImg, note[i][j - 1], note[i][j], (0,0,255), 5)
+        if i != 0:
+             print('salva salva: ', i, ' =  ', note[i])
+             backgroundImg = cv2.line(backgroundImg, note[i-1], note[i], (255, 255, 255), 1)
     cv2.imwrite(tempSavedDir + 'number.png', backgroundImg)
+    backgroundImg = cv2.resize(backgroundImg, (28, 28))
+    cv2.imwrite(tempSavedDir + 'number1.png', backgroundImg)
     print('foto salvataaaa')
-
-
-    # aux = 1
-    # while aux <= count:
-    #     print("salvataggio nuova foto")
-    #     if aux - 1 in arrayNote:
-    #         note = arrayNote[aux - 1]
-    #         print(note)
-    #         for i in range(len(note)):
-    #             for j in range(len(note[i])):
-    #                 if j != 0:
-    #                     blank_image = cv2.line(blank_image, note[i][j - 1], note[i][j], (0,0,0), 5)
-    #     cv2.imwrite(tempSavedDir + 'out_img' + str(aux) + '.jpg', blank_image)
-    #     aux += 1
+    #invochiamo la funzione che prova a leggere il numero scritto
+    #readImage()
 
 
 
@@ -60,13 +49,31 @@ def createImg():
 #model.save('handwritten.model')
 
 
-#########################################################
+################DA SCOMMENTARE######################
+
+def readImage():
+    model = tf.keras.models.load_model('handwritten.model')
+
+    try:
+        img = cv2.imread(f"tempMl/number1.png")[:,:,0]
+        img = np.invert(np.array([img]))
+        prediction = model.predict(img)
+        print(f"This digit is probably a {np.argmax(prediction)}")
+        plt.imshow(img[0], cmap=plt.cm.binary)
+        plt.show()
+    except:
+        print("Error!")
+
+
+###############################################
+
 # model = tf.keras.models.load_model('handwritten.model')
 #
 # image_number = 1
 #
 # try:
-#     img = cv2.imread(f"image/testMl/digit1.png")[:,:,0]
+#     img = cv2.imread(f"tempMl/number1.png")[:,:,0]
+#     img = cv2.resize(img, (28, 28))
 #     img = np.invert(np.array([img]))
 #     prediction = model.predict(img)
 #     print(f"This digit is probably a {np.argmax(prediction)}")
@@ -76,4 +83,3 @@ def createImg():
 #     print("Error!")
 # finally:
 #     image_number += 1
-
