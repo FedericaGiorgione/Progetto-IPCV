@@ -287,7 +287,7 @@ def main():
                         startDist = length
 
                     length, info, img = detector.findDistance(lmListR[8], lmListL[8], img)
-                    scale = float((length - startDist) / 60)
+                    scale = int((length - startDist) / 60)
                     if scale > 4:
                         scale = 4
                     elif scale < 1:
@@ -341,38 +341,71 @@ def main():
             #print('cx s= ', cx * scale, 'cy s= ', cy * scale)
             #530 > 640
             if scale*cx > waux/4 and scale*cx < 3/4*waux and scale*cy > haux/4 and scale*cy < 3/4*haux:  # zona 9
-                #print('zona: ', 9)
-                zoomedImg = imgCurrent[int(cy * scale) - 360:int(cy * scale) + 360,
-                            int(cx * scale) - 640:int(cx * scale) + 640]
+                print('zona: ', 9)
+                padY = int(cy * scale) - 360
+                padX = int(cx * scale) - 640
+                padYneg = int(cy * scale) - 360
+                padXneg = int(cx * scale) - 640
+
+                if padY < 0:
+                    padY = 0
+                else:
+                    padYneg = 0
+
+                if padX < 0:
+                    padX = 0
+                else:
+                    padXneg = 0
+
+                zoomedImg = imgCurrent[padY:int(cy * scale) + 360 + padYneg,
+                                        padX:int(cx * scale) + 640 + padXneg]
             elif scale*cx < waux/4 and scale*cy < haux/4:  # zona 1
-                #print('zona: ', 1)
+                print('zona: ', 1)
+                padY = 0
+                padX = 0
                 zoomedImg = imgCurrent[0:720, 0:1280]
             elif scale*cx < waux/4 and scale*cy > haux*3/4:  # zona 7
-                #print('zona: ', 7)
+                print('zona: ', 7)
+                padY = haux-720
+                padX = 0
                 zoomedImg = imgCurrent[haux-720:haux, 0:1280]
             elif scale*cx < waux/4:  # zona 8
-                #print('zona: ', 8)
+                print('zona: ', 8)
+                padY = int(scale*cy)-360
+                padX = 0
                 zoomedImg = imgCurrent[int(scale*cy)-360:int(scale*cy)+360, 0:1280]
             elif scale*cx > 3/4*waux and scale*cy < haux/4:  # zona 3
-                #print('zona: ', 3)
+                print('zona: ', 3)
+                padY = 0
+                padX = waux-1280
                 zoomedImg = imgCurrent[0:720, waux-1280:waux]
             elif scale*cx > 3/4*waux and scale*cy > haux*3/4:  # zona 5
-                #print('zona: ', 5)
+                print('zona: ', 5)
+                padY = haux-720
+                padX = waux-1280
                 zoomedImg = imgCurrent[haux-720:haux, waux-1280:waux]
             elif scale*cx > 3/4*waux:  # zona 4
-                #print('zona: ', 4)
+                print('zona: ', 4)
+                padY = int(scale*cy)-360
+                padX = waux-1280
                 zoomedImg = imgCurrent[int(scale*cy)-360: int(scale*cy)+360, waux-1280: waux]
             elif scale*cy < haux/4:  # zona 2
-                #print('zona: ', 2)
+                print('zona: ', 2)
+                padY = 0
+                padX = int(scale*cx)-640
                 zoomedImg = imgCurrent[0:720, int(scale*cx)-640: int(scale*cx)+640]
             elif scale*cy > haux*3/4:  # zona 6
-                #print('zona: ', 6)
+                padY = haux-720
+                padX = int(scale * cx) - 640
+                print('zona: ', 6)
                 zoomedImg = imgCurrent[haux-720:haux, int(scale * cx) - 640: int(scale * cx) + 640]
 
         # 2) Aggiungo la webcam nella schermata delle slide
         imageSmall = cv2.resize(img, (wSmall, hSmall))
         #h, w, _ = imgCurrent.shape
         h, w, _ = zoomedImg.shape
+        print(zoomedImg.shape)
+        print('scale: ', scale)
         zoomedImg[0:hSmall, w - wSmall:w] = imageSmall
 
         imgCurrent = cv2.resize(zoomedImg, None, fx=1, fy=1)
