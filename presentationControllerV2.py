@@ -10,10 +10,20 @@ import os
 import closureController
 import handwrittenRecognition
 
+tempDir = "Slides/"
 dictOfAnnotations = {}
 
-########annotations number machine learning#####
+#teniamo traccia della posizioni dell'inidce quando scriviamo un numero per il riconoscimento
 numberMl = []
+
+
+def countNumberOfPages():
+    count = 0
+    for image in os.listdir(tempDir):
+        count += 1
+    return count
+
+
 
 def main():
     # ---------VARIABILI---------
@@ -44,7 +54,6 @@ def main():
     annotationCounter = 0  # indice di disegno (altrimenti viene disegnata una linea tra ogni disegno)
     annotationStart = False  # flag per far partire un nuovo disegno
 
-
     #########################colori######################################
     black = (0, 0, 0)
     white = (255, 255, 255)
@@ -62,13 +71,10 @@ def main():
     redIcon = cv2.resize(redIcon, None, fx=0.2, fy=0.2)
     blueIcon = cv2.imread("image/blue.png")
     blueIcon = cv2.resize(blueIcon, None, fx=0.2, fy=0.2)
-    #yellowIcon = cv2.imread("image/yellow.png")
-    #yellowIcon = cv2.resize(yellowIcon, None, fx=0.2, fy=0.2)
+    # yellowIcon = cv2.imread("image/yellow.png")
+    # yellowIcon = cv2.resize(yellowIcon, None, fx=0.2, fy=0.2)
 
     changeColor = True
-
-
-
 
     ###############################################################################
 
@@ -86,6 +92,8 @@ def main():
     padX = 0
     padY = 0
 
+    cx, cy = None, None
+
 
     # ---------------------------
 
@@ -96,7 +104,19 @@ def main():
     # prendo la lista delle immagini
     pathImgs = sorted(os.listdir(folderPath), key=len)  # ordino per linghezza così non ho problemi con le decine
 
+    #variabile conteggio pagine
+    auxCountPages = True
+    numbersOfPages = 0
+
     while True:
+
+        #conto il numero totale di pagine presenti
+        if auxCountPages:
+            numbersOfPages = countNumberOfPages()
+            auxCountPages = False
+
+
+
         # Importo le immagini
         success, img = cap.read()
         img = cv2.flip(img, 1)
@@ -147,8 +167,12 @@ def main():
 
             # ROI per il puntatore (metà destra schermo)
             if rightHand:
-                xValR = int(np.interp(lmListR[8][0], [width // 2, imgCurrent.shape[1]-200], [0, width]))
-                yValR = int(np.interp(lmListR[8][1], [200, height - 200], [0, height]))
+                if scale==1:
+                    xValR = int(np.interp(lmListR[8][0], [width // 2, imgCurrent.shape[1]-200], [0, width]))
+                    yValR = int(np.interp(lmListR[8][1], [200, height - 200], [0, height]))
+                else:
+                    xValR = int(np.interp(lmListR[8][0], [width // 2, imgCurrent.shape[1]-200], [int(padX/scale), int((padX-padXneg+width)/scale)]))
+                    yValR = int(np.interp(lmListR[8][1], [200, height - 200], [int(padY/scale), int((padY-padYneg+height)/scale)]))
                 indexFingerR = xValR, yValR
 
             # ROI per il puntatore (metà sinistra schermo)
@@ -229,7 +253,7 @@ def main():
                 cLocY = int(pLocY + (indexFingerR[1] - pLocY) / smoothening)
                 indexFingerR = cLocX, cLocY
 
-                cv2.circle(imgCurrent, indexFingerR, 8, cColor, cv2.FILLED)
+                cv2.circle(imgCurrent, indexFingerR, 8, (0, 0, 255), cv2.FILLED)
                 #annotationStart = False
 
                 pLocX, pLocY = cLocX, cLocY
@@ -238,10 +262,44 @@ def main():
                 cLocY = int(pLocY + (indexFingerL[1] - pLocY) / smoothening)
                 indexFingerL = cLocX, cLocY
 
-                cv2.circle(imgCurrent, indexFingerL, 8, cColor, cv2.FILLED)
+                cv2.circle(imgCurrent, indexFingerL, 8, (0, 0, 255), cv2.FILLED)
                 #annotationStart = False
 
                 pLocX, pLocY = cLocX, cLocY
+
+
+            #####################gesture - Cambio slide disegnando numero#################
+            # if rightHand and fingersR == [0, 1, 1, 0, 0]:
+            #     cLocX = int(pLocX + (indexFingerR[0] - pLocX) / smoothening)
+            #     cLocY = int(pLocY + (indexFingerR[1] - pLocY) / smoothening)
+            #     indexFingerR = cLocX, cLocY
+            #
+            #     if annotationStart is False:
+            #         annotationStart = True
+            #
+            #     cv2.circle(imgCurrent, indexFingerR, 8, cColor, cv2.FILLED)
+            #     pLocX, pLocY = cLocX, cLocY
+            #     numberMl.append(indexFingerR)
+            #
+            # elif leftHand and fingersL == [0, 1, 1, 0, 0]:
+            #     cLocX = int(pLocX + (indexFingerL[0] - pLocX) / smoothening)
+            #     cLocY = int(pLocY + (indexFingerL[1] - pLocY) / smoothening)
+            #     indexFingerL = cLocX, cLocY
+            #
+            #     if annotationStart is False:
+            #         annotationStart = True
+            #     cv2.circle(imgCurrent, indexFingerL, 8, cColor, cv2.FILLED)
+            #     pLocX, pLocY = cLocX, cLocY
+            #     numberMl.append(indexFingerL)
+            #
+            # else:
+            #     annotationStart = False
+            #     # PASSO IL VETTORE PER CREARE L'IMMAGINE E LEGGERE IL NUMERO
+            #     if len(numberMl) != 0:
+            #         handwrittenRecognition.note = numberMl
+            #         handwrittenRecognition.createImg()
+            #         numberMl.clear()
+            ##########################################################################
 
             # GESTURE A DUE MANI
 
@@ -253,21 +311,17 @@ def main():
                     indexFingerR = cLocX, cLocY
 
                     if annotationStart is False:
-                        print('siamo dentro')
                         annotationStart = True
                         annotationCounter += 1
                         annotations.append([])  # inizio un nuovo disegno
                         dictOfAnnotations[imgCount] = []
 
-                    cv2.circle(imgCurrent, indexFingerR, 8, (0, 0, 255), cv2.FILLED)
+                    cv2.circle(imgCurrent, indexFingerR, 8, cColor, cv2.FILLED)
                     annotations[annotationCounter].append(indexFingerR)
                     dictOfAnnotations[imgCount] = annotations
-                    pLocX, pLocY = cLocX, cLocY
 
-                    #########################################################################
-                    numberMl.append(indexFingerR)
-                    print(numberMl)
-                    #########################################################################
+
+                    pLocX, pLocY = cLocX, cLocY
 
                 elif fingersL == [0, 1, 0, 0, 0] and fingersR == [1, 1, 1, 1, 1]:
                     cLocX = int(pLocX + (indexFingerL[0] - pLocX) / smoothening)
@@ -280,23 +334,13 @@ def main():
                         annotations.append([])  # inizio un nuovo disegno
                         dictOfAnnotations[imgCount] = annotations
 
-                    cv2.circle(imgCurrent, indexFingerL, 8, (0, 0, 255), cv2.FILLED)
+                    cv2.circle(imgCurrent, indexFingerL, 8, cColor, cv2.FILLED)
                     annotations[annotationCounter].append(indexFingerL)
                     dictOfAnnotations[imgCount] = annotations
-                    pLocX, pLocY = cLocX, cLocY
 
-                    #########################################################################
-                    numberMl.append(indexFingerR)
-                    print(numberMl)
-                    #########################################################################
+                    pLocX, pLocY = cLocX, cLocY
                 else:
                     annotationStart = False
-                    #################PASSO IL VETTORE PER CREARE L'IMMAGINE E LEGGERE IL NUMERO###################
-                    if len(numberMl) != 0:
-                        handwrittenRecognition.note = numberMl
-                        handwrittenRecognition.createImg()
-                        numberMl.clear()
-                    #########################################################################
 
                 # Gesture 5 - Cancella ultimo disegno (indice, medio, pollice e seconda mano aperta)
                 if fingersR == [1, 1, 1, 0, 0] and fingersL == [1, 1, 1, 1, 1]:
@@ -305,7 +349,6 @@ def main():
                             annotations.pop(-1)
                             annotationCounter -= 1
                             dictOfAnnotations[imgCount] = annotations
-                            #print(dictOfAnnotations)
                             buttonPressed = True
 
                 if fingersL == [1, 1, 1, 0, 0] and fingersR == [1, 1, 1, 1, 1]:
@@ -314,7 +357,6 @@ def main():
                             annotations.pop(-1)
                             annotationCounter -= 1
                             dictOfAnnotations[imgCount] = annotations
-                            #print(dictOfAnnotations)
                             buttonPressed = True
 
                 # Gesture 6 - Cancella tutti i disegni (entrmabi le amni aperte)
@@ -324,7 +366,6 @@ def main():
                             annotations = [[]]
                             annotationCounter = 0
                             dictOfAnnotations[imgCount] = annotations
-                            print(dictOfAnnotations)
                             buttonPressed = True
 
                 # Gesture 7 - Zoom
@@ -334,16 +375,16 @@ def main():
                         startDist = length
 
                     length, info, img = detector.findDistance(lmListR[8], lmListL[8], img)
-                    scale = float((length - startDist) / 60)
+                    scale = int((length - startDist) / 60)
                     if scale > 4:
                         scale = 4
                     elif scale < 1:
                         scale = 1
                     # conserviamo il punto centrale della distanza fra gli indici
                     # cx, cy = info[4:]
-                    print("fattore di scala: ", scale)
+                    #print("fattore di scala: ", scale)
 
-                ####################gesture per cambio colore#######################################
+                # Gesture 8 - Cambio colore delle note
                 if fingersR == [1, 1, 1, 0, 0] and fingersL == [1, 1, 1, 0, 0]:
                     print("cambio colore")
                     if changeColor:
@@ -359,7 +400,14 @@ def main():
                 else:
                     changeColor = True
 
-                ######################################################################################
+            # Gesture 9 - Movimento nell'immagine scalata
+            if scale>1:
+                if fingersR == [1, 1, 0, 0, 0]:
+                    cx, cy, = lmListR[8][0], lmListR[8][1]
+                elif fingersL == [1, 1, 0, 0, 0]:
+                    cx, cy = lmListL[8][0], lmListL[8][1]
+            else:
+                cx, cy = None, None
 
         else:
             annotationStart = False
@@ -370,22 +418,14 @@ def main():
                 buttonCounter = 0
                 buttonPressed = False
 
-        for i in range(len(annotations)):
-            for j in range(len(annotations[i])):
-                if j != 0:
-                    #print(annotationCounter, ' e ', annotations[i][j])
-                    cv2.line(imgCurrent, annotations[i][j - 1], annotations[i][j], cColor,
-                             5)  # disegna una linea tra ogni punto
+
+        #################SCRITTURA GESTURE CAMBIO SLIDE##############################
+        # if len(numberMl) != 0:
+        #     for i in range(len(numberMl)):
+        #         if i != 0:
+        #             cv2.line(imgCurrent, numberMl[i - 1], numberMl[i], cColor, 5)
 
 
-        """
-        for i in range(len(annotations)):
-            for j in range(len(annotations[i])):
-                if j != 0:
-                    #print(annotationCounter, ' e ', annotations[i][j])
-                    cv2.line(imgCurrent, annotations[i][j - 1], annotations[i][j], cColor,
-                             5)  # disegna una linea tra ogni punto
-        """
 
         if len(dictOfAnnotations) != 0:
             if imgCount in dictOfAnnotations:
@@ -397,57 +437,99 @@ def main():
                             cv2.line(imgCurrent, note[i][j - 1], note[i][j], cColor,
                                      5)  # disegna una linea tra ogni punto
 
+        #contiene l'immagine attuale, potrebbe essere scalato se applichiamo lo zoom
         imgCurrent = cv2.resize(imgCurrent, None, fx=scale, fy=scale)
 
-        # zoom dal centro
+        #prendiamo solo la porzione centrale dell'immagine quando zoomiamo
         haux, waux, _ = imgCurrent.shape
-        zoomedImg = imgCurrent[haux // 2 - 360:haux // 2 + 360, waux // 2 - 640:waux // 2 + 640]
+        zoomedImg = imgCurrent[haux//2-360:haux//2+360, waux//2-640:waux//2+640]
 
-#######################creazione immagine di sfondo e resize delle slide#################################
-        auxZoomedImg = zoomedImg #1280x720
-        auxImgCurrent = cv2.resize(auxZoomedImg, None, fx=0.7, fy=0.7) #640x360
 
-        print(auxImgCurrent.shape)
+        #se l'immagine è scalata dobbiamo fare i controlli se prendiamo una porzione non della dimensione che ci serve
+        if cx != None:
+            if scale*cx > waux/4 and scale*cx < 3/4*waux and scale*cy > haux/4 and scale*cy < 3/4*haux:  # zona 9
+                print('zona: ', 9)
+                padY = int(cy * scale) - 360
+                padX = int(cx * scale) - 640
+                padYneg = int(cy * scale) - 360
+                padXneg = int(cx * scale) - 640
 
-###################################################################################
+                if padY < 0:
+                    padY = 0
+                else:
+                    padYneg = 0
+
+                if padX < 0:
+                    padX = 0
+                else:
+                    padXneg = 0
+
+                zoomedImg = imgCurrent[padY:int(cy * scale) + 360 + padYneg,
+                                        padX:int(cx * scale) + 640 + padXneg]
+            elif scale*cx < waux/4 and scale*cy < haux/4:  # zona 1
+                print('zona: ', 1)
+                padY = 0
+                padX = 0
+                zoomedImg = imgCurrent[0:720, 0:1280]
+            elif scale*cx < waux/4 and scale*cy > haux*3/4:  # zona 7
+                print('zona: ', 7)
+                padY = haux-720
+                padX = 0
+                zoomedImg = imgCurrent[haux-720:haux, 0:1280]
+            elif scale*cx < waux/4:  # zona 8
+                print('zona: ', 8)
+                padY = int(scale*cy)-360
+                padX = 0
+                zoomedImg = imgCurrent[int(scale*cy)-360:int(scale*cy)+360, 0:1280]
+            elif scale*cx > 3/4*waux and scale*cy < haux/4:  # zona 3
+                print('zona: ', 3)
+                padY = 0
+                padX = waux-1280
+                zoomedImg = imgCurrent[0:720, waux-1280:waux]
+            elif scale*cx > 3/4*waux and scale*cy > haux*3/4:  # zona 5
+                print('zona: ', 5)
+                padY = haux-720
+                padX = waux-1280
+                zoomedImg = imgCurrent[haux-720:haux, waux-1280:waux]
+            elif scale*cx > 3/4*waux:  # zona 4
+                print('zona: ', 4)
+                padY = int(scale*cy)-360
+                padX = waux-1280
+                zoomedImg = imgCurrent[int(scale*cy)-360: int(scale*cy)+360, waux-1280: waux]
+            elif scale*cy < haux/4:  # zona 2
+                print('zona: ', 2)
+                padY = 0
+                padX = int(scale*cx)-640
+                zoomedImg = imgCurrent[0:720, int(scale*cx)-640: int(scale*cx)+640]
+            elif scale*cy > haux*3/4:  # zona 6
+                padY = haux-720
+                padX = int(scale * cx) - 640
+                print('zona: ', 6)
+                zoomedImg = imgCurrent[haux-720:haux, int(scale * cx) - 640: int(scale * cx) + 640]
+
 
         # 2) Aggiungo la webcam nella schermata delle slide
-        imageSmall = cv2.resize(img, (wSmall, hSmall))
-        #h, w, _ = imgCurrent.shape
-        h, w, _ = zoomedImg.shape
+        camWindow = cv2.resize(img, (wSmall, hSmall))
 
-        zoomedImg[0:hSmall, w - wSmall:w] = imageSmall
-
-        imgCurrent = cv2.resize(zoomedImg, None, fx=1, fy=1)
-        imgCurrent[0:, 0:] = zoomedImg
-
-        auxY, auxX, _ = auxImgCurrent.shape
-        imgCurrent[100:auxY + 100, 300:auxX + 300] = auxImgCurrent
 
         cv2.imshow("Image", img)
-        cv2.imshow("Presentation", imgCurrent)
 
-        key = cv2.waitKey(1)
-
-
-###########################INTERFACCIA A TUTTO SCHERMO###############################################
+        #############creazione interfaccia utente##############
         backgroundImg = cv2.imread("image/background.jpg")
 
-        #imgResized = cv2.resize(auxZoomedImg, None, fx=0.2, fy=0.2)
-
-        #inserimento camera
-        backgroundImg[30:hSmall+30, 30:wSmall+30] = imageSmall
-        auxY, auxX, _ = auxImgCurrent.shape
-        #print(auxX, auxY)
-
-        #inserimento immagine slide
-        backgroundImg[100:auxY + 100, 300:auxX + 300] = auxImgCurrent
+        #inserisco la cam in alto a destra
+        backgroundImg[30:hSmall + 30, 30:wSmall + 30] = camWindow
 
 
+        #ridimensiono l'immagine della slide per inserirla nel mio progetto
+        resizedImg = cv2.resize(zoomedImg, None, fx=0.7, fy=0.7)
+        auxY, auxX, _ = resizedImg.shape
 
+        # inserimento immagine slide
+        backgroundImg[100:auxY + 100, 300:auxX + 300] = resizedImg
 
-        #inserimento colori e bordo nel colore attivo
-        grey = (128,128,128)
+        # inserimento colori e bordo nel colore attivo
+        grey = (128, 128, 128)
         if cColor == red:
             # inserisco il bordo nel colore attivo
             activeColor = cv2.copyMakeBorder(redIcon, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=grey)
@@ -472,19 +554,23 @@ def main():
         if cColor == white:
             # inserisco il bordo nel colore attivo
             activeColor = cv2.copyMakeBorder(whiteIcon, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=grey)
-            backgroundImg[hSmall + 131: hSmall + 202, wSmall - 51: wSmall +20] = activeColor
+            backgroundImg[hSmall + 131: hSmall + 202, wSmall - 51: wSmall + 20] = activeColor
         else:
             backgroundImg[hSmall + 141: hSmall + 192, wSmall - 41: wSmall + 10] = whiteIcon
 
 
-
-        cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
-        #cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-        cv2.imshow("window", backgroundImg)
+        #inserisco il numero della slide e il totale numero di slides presenti
+        cv2.putText(backgroundImg, text=str(imgCount+1) + '/' + str(numbersOfPages), org=(1100, 80), fontFace=cv2.FONT_HERSHEY_TRIPLEX, fontScale=1, color=(255, 255, 255),thickness=2)
 
 
 
-########################################################################################################
+        #configurazione finestra a schermo intero (con barra sopra presente)
+        cv2.namedWindow("Presentation", cv2.WND_PROP_FULLSCREEN)
+
+        #visualizzazione schermata applicazione
+        cv2.imshow("Presentation", backgroundImg)
+
+        key = cv2.waitKey(1)
 
         #GESTIONE CHIUSURA FINESTRA
         if key == ord('q'):
@@ -496,8 +582,6 @@ def main():
         elif cv2.getWindowProperty("Image", cv2.WND_PROP_VISIBLE) < 1:
             closureController.closingApp()
             #break
-
-
 
     cv2.destroyAllWindows()
 
