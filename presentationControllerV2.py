@@ -11,6 +11,7 @@ import os
 import backgroundRemoval
 import closureController
 import handwrittenRecognition
+import numpy as np
 
 tempDir = "temp/"
 dictOfAnnotations = {}
@@ -34,8 +35,8 @@ def main():
 
     width = 1280
     height = 720
-    #folderPath = "Slides\\"
-    folderPath = "temp\\"
+    folderPath = "Slides\\"
+    #folderPath = "temp\\"
     imgCount = 0
 
     n, m = 1, 1  # moltiplicatori per la dimensione delle slide
@@ -64,7 +65,7 @@ def main():
     black = (0, 0, 0)
     white = (255, 255, 255)
     red = (0, 0, 255)
-    blue = (128, 0, 128)
+    blue = (255, 0, 0)
     yellow = (255, 255, 0)
 
     cColor = red  # colore di disegno corrente
@@ -79,6 +80,8 @@ def main():
     blueIcon = cv2.resize(blueIcon, None, fx=0.2, fy=0.2)
     # yellowIcon = cv2.imread("image/yellow.png")
     # yellowIcon = cv2.resize(yellowIcon, None, fx=0.2, fy=0.2)
+
+    tutorial = cv2.imread("image\\tutorial.png")
 
     changeColor = True
 
@@ -202,7 +205,7 @@ def main():
 
             if rightHand:
                 # Gesture attivazione camera
-                if fingersR == [0, 0, 1, 1, 1]:
+                if fingersR == [1, 0, 0, 0, 1]:
                     print("disattivo camera", camera)
                     if camera and auxControlCamera:
                         camera = False
@@ -215,7 +218,6 @@ def main():
 
                 # Gesture attivazione blur
                 if fingersR == [0, 1, 1, 1, 1]:
-                    print("disattivo blur", blur)
                     if blur and auxControlBLur:
                         blur = False
                         auxControlBLur = False
@@ -224,6 +226,7 @@ def main():
                         auxControlBLur = False
                 else:
                     auxControlBLur = True
+
 
                 if cyR <= gestureThreshold:
                     annotationStart = False
@@ -264,7 +267,7 @@ def main():
                                 annotationCounter = 0
             if leftHand:
                 # Gesture attivazione camera
-                if fingersL == [0, 0, 1, 1, 1]:
+                if fingersL == [1, 0, 0, 0, 1]:
                     print("disattivo camera", camera)
                     if camera and auxControlCamera:
                         camera = False
@@ -275,7 +278,7 @@ def main():
                 else:
                     auxControlCamera = True
 
-                # Gesture attivazione camera
+                # Gesture attivazione blur
                 if fingersL == [0, 1, 1, 1, 1]:
                     if blur and auxControlBLur:
                         blur = False
@@ -485,7 +488,8 @@ def main():
                     #print("fattore di scala: ", scale)
 
                 # Gesture 8 - Cambio colore delle note
-                if fingersR == [1, 1, 1, 0, 0] and fingersL == [1, 1, 1, 0, 0]:
+                if (fingersR == [1, 1, 1, 1, 1] and fingersL == [0, 1, 1, 1, 1]) or \
+                        (fingersL == [1, 1, 1, 1, 1] and fingersR == [0, 1, 1, 1, 1]):
                     print("cambio colore")
                     if changeColor:
                         changeColor = False
@@ -614,8 +618,8 @@ def main():
         # 2) Aggiungo la webcam nella schermata delle slide
         camWindow = cv2.resize(img, (wSmall, hSmall))
 
-
-        cv2.imshow("Image", img)
+        imgSupport = np.concatenate((cv2.resize(img, (910, 512)), tutorial), axis=1)
+        cv2.imshow("Gestures tutorial", imgSupport)
 
         #############creazione interfaccia utente##############
         backgroundImg = cv2.imread("image/background.jpg")
@@ -715,7 +719,7 @@ def main():
         elif cv2.getWindowProperty("Presentation", cv2.WND_PROP_VISIBLE) < 1:
             closureController.closingApp()
             #break
-        elif cv2.getWindowProperty("Image", cv2.WND_PROP_VISIBLE) < 1:
+        elif cv2.getWindowProperty("Gestures tutorial", cv2.WND_PROP_VISIBLE) < 1:
             closureController.closingApp()
             #break
 
