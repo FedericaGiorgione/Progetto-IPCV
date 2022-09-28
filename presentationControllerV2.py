@@ -7,6 +7,8 @@ import cv2
 from cvzone.HandTrackingModule import HandDetector
 import numpy as np
 import os
+
+import backgroundRemoval
 import closureController
 import handwrittenRecognition
 
@@ -119,6 +121,9 @@ def main():
     blur = False
 
 
+    auxControlCamera = True
+    auxControlBLur = True
+
     while True:
 
         #conto il numero totale di pagine presenti
@@ -194,6 +199,30 @@ def main():
             # GESTURE A UNA MANO
 
             if rightHand:
+                # Gesture attivazione camera
+                if fingersR == [0, 0, 1, 1, 1]:
+                    print("disattivo camera", camera)
+                    if camera and auxControlCamera:
+                        camera = False
+                        auxControlCamera = False
+                    elif camera == False and auxControlCamera:
+                        camera = True
+                        auxControlCamera = False
+                else:
+                    auxControlCamera = True
+
+                # Gesture attivazione blur
+                if fingersR == [0, 1, 1, 1, 1]:
+                    print("disattivo blur", blur)
+                    if blur and auxControlBLur:
+                        blur = False
+                        auxControlBLur = False
+                    elif blur == False and auxControlBLur:
+                        blur = True
+                        auxControlBLur = False
+                else:
+                    auxControlBLur = True
+
                 if cyR <= gestureThreshold:
                     annotationStart = False
 
@@ -229,11 +258,31 @@ def main():
                                 annotations = [[]]
                                 annotationCounter = 0
             if leftHand:
+                # Gesture attivazione camera
+                if fingersL == [0, 0, 1, 1, 1]:
+                    print("disattivo camera", camera)
+                    if camera and auxControlCamera:
+                        camera = False
+                        auxControlCamera = False
+                    elif camera == False and auxControlCamera:
+                        camera = True
+                        auxControlCamera = False
+                else:
+                    auxControlCamera = True
+
+                # Gesture attivazione camera
+                if fingersL == [0, 1, 1, 1, 1]:
+                    if blur and auxControlBLur:
+                        blur = False
+                        auxControlBLur = False
+                    elif blur == False and auxControlBLur:
+                        blur = True
+                        auxControlBLur = False
+                else:
+                    auxControlBLur = True
+
                 if cyL <= gestureThreshold:
                     annotationStart = False
-
-                    # Gesture attivazione camera
-
 
 
                     # Gesture 1 - sinistra (pollice)
@@ -544,6 +593,9 @@ def main():
                 zoomedImg = imgCurrent[haux-720:haux, int(scale * cx) - 640: int(scale * cx) + 640]
 
 
+        if blur:
+            img = backgroundRemoval.blurBackground(img, 15)
+
         # 2) Aggiungo la webcam nella schermata delle slide
         camWindow = cv2.resize(img, (wSmall, hSmall))
 
@@ -559,7 +611,8 @@ def main():
 
 
         #inserisco la cam in alto a destra
-        backgroundImg[30:hSmall + 30, 30:wSmall + 30] = camWindow
+        if camera:
+            backgroundImg[30:hSmall + 30, 30:wSmall + 30] = camWindow
 
 
         #ridimensiono l'immagine della slide per inserirla nel mio progetto

@@ -8,7 +8,7 @@ import os
 cap = cv2.VideoCapture(0) #capture from webcam
 cap.set(3,640) #width
 cap.set(4,480) #height
-segmentor = SelfiSegmentation()
+
 
 while True:
     success, img = cap.read()
@@ -23,10 +23,12 @@ while True:
 '''
 
 def blurBackground(img, value):
+    segmentor = SelfiSegmentation()
     blurred = cv2.GaussianBlur(img, (value, value), 0)
     imgOut = segmentor.removeBG(img, blurred, threshold=0.7)
     return imgOut
 
 def changeBackground(img, bg):
+    segmentor = SelfiSegmentation()
     imgOut = segmentor.removeBG(img, bg, threshold=0.7)
     return imgOut
