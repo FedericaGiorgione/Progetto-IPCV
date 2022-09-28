@@ -12,7 +12,7 @@ import backgroundRemoval
 import closureController
 import handwrittenRecognition
 
-tempDir = "Slides/"
+tempDir = "temp/"
 dictOfAnnotations = {}
 
 #teniamo traccia della posizioni dell'inidce quando scriviamo un numero per il riconoscimento
@@ -34,8 +34,8 @@ def main():
 
     width = 1280
     height = 720
-    folderPath = "Slides\\"
-    #folderPath = "temp\\"
+    #folderPath = "Slides\\"
+    folderPath = "temp\\"
     imgCount = 0
 
     n, m = 1, 1  # moltiplicatori per la dimensione delle slide
@@ -57,6 +57,8 @@ def main():
     annotations = [[]]
     annotationCounter = 0  # indice di disegno (altrimenti viene disegnata una linea tra ogni disegno)
     annotationStart = False  # flag per far partire un nuovo disegno
+    colorArray = [[]]
+
 
     #########################colori######################################
     black = (0, 0, 0)
@@ -236,6 +238,7 @@ def main():
                             imgCount -= 1
                             if imgCount in dictOfAnnotations:
                                 annotations = dictOfAnnotations[imgCount]['annotations']
+                                colorArray = dictOfAnnotations[imgCount]['cColor']
                                 annotationCounter = len(dictOfAnnotations[imgCount])-1
                             else:
                                 annotations = [[]]
@@ -253,9 +256,11 @@ def main():
 
                             if imgCount in dictOfAnnotations:
                                 annotations = dictOfAnnotations[imgCount]['annotations']
+                                colorArray = dictOfAnnotations[imgCount]['cColor']
                                 annotationCounter = len(dictOfAnnotations[imgCount]) - 1
                             else:
                                 annotations = [[]]
+                                colorArray = [[]]
                                 annotationCounter = 0
             if leftHand:
                 # Gesture attivazione camera
@@ -296,6 +301,7 @@ def main():
                             imgCount -= 1
 
                             annotations = [[]]
+                            colorArray = [[]]
                             annotationCounter = 0
 
                     # Gesture 2 - destra (mignolo)
@@ -308,6 +314,7 @@ def main():
                             scale = 1
                             imgCount += 1
                             annotations = [[]]
+                            colorArray = [[]]
                             annotationCounter = 0
 
             # Gesture 3 - Puntatore (indice)
@@ -399,11 +406,13 @@ def main():
                         annotationStart = True
                         annotationCounter += 1
                         annotations.append([])  # inizio un nuovo disegno
+                        colorArray.append([])
                         dictOfAnnotations[imgCount] = []
 
                     cv2.circle(imgCurrent, indexFingerR, 8, cColor, cv2.FILLED)
                     annotations[annotationCounter].append(indexFingerR)
-                    dictOfAnnotations[imgCount] = {'annotations':annotations, 'cColor':cColor}
+                    colorArray[annotationCounter].append(cColor)
+                    dictOfAnnotations[imgCount] = {'annotations':annotations, 'cColor':colorArray}
                     print(dictOfAnnotations)
 
                     pLocX, pLocY = cLocX, cLocY
@@ -417,11 +426,13 @@ def main():
                         annotationStart = True
                         annotationCounter += 1
                         annotations.append([])  # inizio un nuovo disegno
+                        colorArray.append([])
                         dictOfAnnotations[imgCount] = annotations
 
                     cv2.circle(imgCurrent, indexFingerL, 8, cColor, cv2.FILLED)
                     annotations[annotationCounter].append(indexFingerL)
-                    dictOfAnnotations[imgCount] = annotations
+                    colorArray[annotationCounter].append(cColor)
+                    dictOfAnnotations[imgCount] = {'annotations':annotations, 'cColor':colorArray}
 
                     pLocX, pLocY = cLocX, cLocY
                 else:
@@ -432,16 +443,19 @@ def main():
                     if annotations:
                         if annotationCounter >= 0:
                             annotations.pop(-1)
+                            colorArray.pop(-1)
                             annotationCounter -= 1
-                            dictOfAnnotations[imgCount] = annotations
+                            dictOfAnnotations[imgCount] = {'annotations':annotations, 'cColor':colorArray}
+
                             buttonPressed = True
 
                 if fingersL == [1, 1, 1, 0, 0] and fingersR == [1, 1, 1, 1, 1]:
                     if annotations:
                         if annotationCounter >= 0:
                             annotations.pop(-1)
+                            colorArray.pop(-1)
                             annotationCounter -= 1
-                            dictOfAnnotations[imgCount] = annotations
+                            dictOfAnnotations[imgCount] = {'annotations':annotations, 'cColor':colorArray}
                             buttonPressed = True
 
                 # Gesture 6 - Cancella tutti i disegni (entrmabi le amni aperte)
@@ -449,8 +463,9 @@ def main():
                     if annotations:
                         if annotationCounter > 0:
                             annotations = [[]]
+                            colorArray = [[]]
                             annotationCounter = 0
-                            dictOfAnnotations[imgCount] = annotations
+                            dictOfAnnotations[imgCount] = {'annotations':annotations, 'cColor':colorArray}
                             buttonPressed = True
 
                 # Gesture 7 - Zoom
@@ -519,7 +534,7 @@ def main():
                     for j in range(len(note['annotations'][i])):
                         if j != 0:
                             # print(annotationCounter, ' e ', annotations[i][j])
-                            cv2.line(imgCurrent, note['annotations'][i][j - 1], note['annotations'][i][j], note['cColor'],
+                            cv2.line(imgCurrent, note['annotations'][i][j - 1], note['annotations'][i][j], note['cColor'][i][j-1],
                                      5)  # disegna una linea tra ogni punto
 
         #contiene l'immagine attuale, potrebbe essere scalato se applichiamo lo zoom

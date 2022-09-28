@@ -4,7 +4,7 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import filedialog
 import os
-import  presentationController
+import  presentationControllerV2
 from pdfrw import PdfReader
 import  closureController
 
@@ -52,7 +52,7 @@ def pdf2jpg():
         if messagebox.showinfo("Result", Result):
             #avviamo le slide
             root.destroy()
-            presentationController.main()
+            presentationControllerV2.main()
 
 
 

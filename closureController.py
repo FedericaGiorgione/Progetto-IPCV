@@ -26,12 +26,12 @@ def addNote():
         print("salvataggio nuova foto")
         imgCurrent = cv2.imread(tempDir + 'out_img' + str(aux) + '.jpg')
         if aux-1 in arrayNote:
-            note = arrayNote[aux - 1]
+            note = arrayNote[aux - 1]['annotasions']
             print(note)
             for i in range(len(note)):
                 for j in range(len(note[i])):
                     if j != 0:
-                        imgCurrent = cv2.line(imgCurrent, note[i][j - 1], note[i][j], cColor, 5)
+                        imgCurrent = cv2.line(imgCurrent, note['annotasions'][i][j - 1], note['annotasions'][i][j], note['cColor'][i][j-1], 5)
         cv2.imwrite(tempSavedDir + 'out_img' + str(aux) + '.jpg', imgCurrent)
         aux += 1
     jpg2pdf(nameOfPdf)
