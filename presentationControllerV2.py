@@ -235,7 +235,7 @@ def main():
                             scale = 1
                             imgCount -= 1
                             if imgCount in dictOfAnnotations:
-                                annotations = dictOfAnnotations[imgCount]
+                                annotations = dictOfAnnotations[imgCount]['annotations']
                                 annotationCounter = len(dictOfAnnotations[imgCount])-1
                             else:
                                 annotations = [[]]
@@ -252,7 +252,7 @@ def main():
                             imgCount += 1
 
                             if imgCount in dictOfAnnotations:
-                                annotations = dictOfAnnotations[imgCount]
+                                annotations = dictOfAnnotations[imgCount]['annotations']
                                 annotationCounter = len(dictOfAnnotations[imgCount]) - 1
                             else:
                                 annotations = [[]]
@@ -403,8 +403,8 @@ def main():
 
                     cv2.circle(imgCurrent, indexFingerR, 8, cColor, cv2.FILLED)
                     annotations[annotationCounter].append(indexFingerR)
-                    dictOfAnnotations[imgCount] = annotations
-
+                    dictOfAnnotations[imgCount] = {'annotations':annotations, 'cColor':cColor}
+                    print(dictOfAnnotations)
 
                     pLocX, pLocY = cLocX, cLocY
 
@@ -515,11 +515,11 @@ def main():
         if len(dictOfAnnotations) != 0:
             if imgCount in dictOfAnnotations:
                 note = dictOfAnnotations[imgCount]
-                for i in range(len(note)):
-                    for j in range(len(note[i])):
+                for i in range(len(note['annotations'])):
+                    for j in range(len(note['annotations'][i])):
                         if j != 0:
                             # print(annotationCounter, ' e ', annotations[i][j])
-                            cv2.line(imgCurrent, note[i][j - 1], note[i][j], cColor,
+                            cv2.line(imgCurrent, note['annotations'][i][j - 1], note['annotations'][i][j], note['cColor'],
                                      5)  # disegna una linea tra ogni punto
 
         #contiene l'immagine attuale, potrebbe essere scalato se applichiamo lo zoom
