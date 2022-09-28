@@ -594,7 +594,7 @@ def main():
 
 
         if blur:
-            img = backgroundRemoval.blurBackground(img, 15)
+            img = backgroundRemoval.blurBackground(img, 9)
 
         # 2) Aggiungo la webcam nella schermata delle slide
         camWindow = cv2.resize(img, (wSmall, hSmall))
