@@ -15,6 +15,8 @@ dictOfAnnotations = {}
 
 #teniamo traccia della posizioni dell'inidce quando scriviamo un numero per il riconoscimento
 numberMl = []
+dicitionaryNumberMl = {}
+
 
 
 def countNumberOfPages():
@@ -108,13 +110,21 @@ def main():
     auxCountPages = True
     numbersOfPages = 0
 
+    #cinteggio numero note
+    countNumber = 0
+    auxCountNumber = True
+
+    #booleani per visualizzazione camera e blur camera
+    camera = True
+    blur = False
+
+
     while True:
 
         #conto il numero totale di pagine presenti
         if auxCountPages:
             numbersOfPages = countNumberOfPages()
             auxCountPages = False
-
 
 
         # Importo le immagini
@@ -222,6 +232,10 @@ def main():
                 if cyL <= gestureThreshold:
                     annotationStart = False
 
+                    # Gesture attivazione camera
+
+
+
                     # Gesture 1 - sinistra (pollice)
                     if fingersL == [1, 0, 0, 0, 0]:
                         annotationStart = False
@@ -276,10 +290,18 @@ def main():
             #
             #     if annotationStart is False:
             #         annotationStart = True
+            #         auxCountNumber = True
+            #
+            #     # if auxCountNumber:
+            #     #     #dicitionaryNumberMl[countNumber] = indexFingerR
+            #     #     countNumber += 1
+            #     #     auxCountNumber = False
             #
             #     cv2.circle(imgCurrent, indexFingerR, 8, cColor, cv2.FILLED)
             #     pLocX, pLocY = cLocX, cLocY
             #     numberMl.append(indexFingerR)
+            #     dicitionaryNumberMl[countNumber] = numberMl
+            #
             #
             # elif leftHand and fingersL == [0, 1, 1, 0, 0]:
             #     cLocX = int(pLocX + (indexFingerL[0] - pLocX) / smoothening)
@@ -288,17 +310,31 @@ def main():
             #
             #     if annotationStart is False:
             #         annotationStart = True
+            #         auxCountNumber = True
+            #
+            #     # if auxCountNumber:
+            #     #     #dicitionaryNumberMl[countNumber] = indexFingerL
+            #     #     countNumber += 1
+            #     #     auxCountNumber = False
+            #
             #     cv2.circle(imgCurrent, indexFingerL, 8, cColor, cv2.FILLED)
             #     pLocX, pLocY = cLocX, cLocY
             #     numberMl.append(indexFingerL)
+            #     dicitionaryNumberMl[countNumber] = numberMl
             #
             # else:
             #     annotationStart = False
-            #     # PASSO IL VETTORE PER CREARE L'IMMAGINE E LEGGERE IL NUMERO
-            #     if len(numberMl) != 0:
-            #         handwrittenRecognition.note = numberMl
-            #         handwrittenRecognition.createImg()
-            #         numberMl.clear()
+            #     if auxCountNumber:
+            #         countNumber += 1
+            #         auxCountNumber = False
+            #         print(dicitionaryNumberMl)
+                # PASSO IL VETTORE PER CREARE L'IMMAGINE E LEGGERE IL NUMERO
+                # if len(numberMl) != 0:
+                #     print(dicitionaryNumberMl)
+                #     handwrittenRecognition.note = numberMl
+                #     handwrittenRecognition.createImg()
+                #     numberMl.clear()
+
             ##########################################################################
 
             # GESTURE A DUE MANI
@@ -516,6 +552,11 @@ def main():
 
         #############creazione interfaccia utente##############
         backgroundImg = cv2.imread("image/background.jpg")
+        checkedIcon = cv2.imread("image/checked.png")
+        checkedIcon = cv2.resize(checkedIcon, (25, 25))
+        uncheckedIcon = cv2.imread("image/unchecked.png")
+        uncheckedIcon = cv2.resize(uncheckedIcon, (25, 25))
+
 
         #inserisco la cam in alto a destra
         backgroundImg[30:hSmall + 30, 30:wSmall + 30] = camWindow
@@ -527,6 +568,33 @@ def main():
 
         # inserimento immagine slide
         backgroundImg[100:auxY + 100, 300:auxX + 300] = resizedImg
+
+
+        #inserimento switch camera
+        if camera:
+            checkY, checkX, _ = checkedIcon.shape
+            backgroundImg[hSmall + 222: hSmall + checkY + 222, 60: 60+checkX] = checkedIcon
+        else:
+            checkY, checkX, _ = uncheckedIcon.shape
+            backgroundImg[hSmall + 222: hSmall + checkY + 222, 60: 60 + checkX] = uncheckedIcon
+
+
+        cv2.putText(backgroundImg, text='Camera', org=(100, hSmall + 242),
+                    fontFace=cv2.FONT_HERSHEY_TRIPLEX, fontScale=0.8, color=(255, 255, 255), thickness=1)
+
+
+        # inserimento switch blur
+        if camera and blur:
+            checkY, checkX, _ = checkedIcon.shape
+            backgroundImg[hSmall + 267: hSmall + checkY + 267, 60: 60 + checkX] = checkedIcon
+        else:
+            checkY, checkX, _ = uncheckedIcon.shape
+            backgroundImg[hSmall + 267: hSmall + checkY + 267, 60: 60 + checkX] = uncheckedIcon
+
+        cv2.putText(backgroundImg, text='Blur Camera', org=(100, hSmall + 287),
+                    fontFace=cv2.FONT_HERSHEY_TRIPLEX, fontScale=0.8, color=(255, 255, 255), thickness=1)
+
+
 
         # inserimento colori e bordo nel colore attivo
         grey = (128, 128, 128)

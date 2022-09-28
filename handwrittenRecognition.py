@@ -12,20 +12,21 @@ note = []
 
 
 def createImg():
-    backgroundImg = cv2.imread("Slides/background.jpg")
+    backgroundImg = cv2.imread("image/white.jpg")
     #backgroundImg = cv2.resize(backgroundImg, None, fx=0.1, fy=0.1)
     print("disegno: ", note)
     print("salvataggio nuova foto")
     for i in range(len(note)):
         if i != 0:
              print('salva salva: ', i, ' =  ', note[i])
-             backgroundImg = cv2.line(backgroundImg, note[i-1], note[i], (255, 255, 255), 1)
+             backgroundImg = cv2.line(backgroundImg, note[i-1], note[i], (0, 0, 0), 70)
     cv2.imwrite(tempSavedDir + 'number.png', backgroundImg)
+    backgroundImg = cv2.resize(backgroundImg, (720, 720))
     backgroundImg = cv2.resize(backgroundImg, (28, 28))
     cv2.imwrite(tempSavedDir + 'number1.png', backgroundImg)
     print('foto salvataaaa')
     #invochiamo la funzione che prova a leggere il numero scritto
-    #readImage()
+    readImage()
 
 
 
@@ -59,8 +60,8 @@ def readImage():
         img = np.invert(np.array([img]))
         prediction = model.predict(img)
         print(f"This digit is probably a {np.argmax(prediction)}")
-        plt.imshow(img[0], cmap=plt.cm.binary)
-        plt.show()
+        #plt.imshow(img[0], cmap=plt.cm.binary)
+        #plt.show()
     except:
         print("Error!")
 
