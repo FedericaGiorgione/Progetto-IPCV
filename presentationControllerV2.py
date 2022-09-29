@@ -144,6 +144,9 @@ def main():
         imgCurrent = cv2.imread(pathFullImgs)
         # imgCurrent = cv2.resize(imgCurrent, (width, height))  # resize a dimensione fissa
 
+        #conservo la camera pulita
+        success2, clearImg = cap.read()
+
         # Rileva le mani
         hands, img = detector.findHands(img)
         cv2.line(img, (0, gestureThreshold), (width, gestureThreshold), (0, 255, 0), 5)
@@ -204,28 +207,29 @@ def main():
             # GESTURE A UNA MANO
 
             if rightHand:
-                # Gesture attivazione camera
-                if fingersR == [1, 0, 0, 0, 1]:
-                    print("disattivo camera", camera)
-                    if camera and auxControlCamera:
-                        camera = False
-                        auxControlCamera = False
-                    elif camera == False and auxControlCamera:
-                        camera = True
-                        auxControlCamera = False
-                else:
-                    auxControlCamera = True
+                if len(hands) == 1:
+                    # Gesture attivazione camera
+                    if fingersR == [1, 0, 0, 0, 1]:
+                        print("disattivo camera", camera)
+                        if camera and auxControlCamera:
+                            camera = False
+                            auxControlCamera = False
+                        elif camera == False and auxControlCamera:
+                            camera = True
+                            auxControlCamera = False
+                    else:
+                        auxControlCamera = True
 
-                # Gesture attivazione blur
-                if fingersR == [0, 1, 1, 1, 1]:
-                    if blur and auxControlBLur:
-                        blur = False
-                        auxControlBLur = False
-                    elif blur == False and auxControlBLur:
-                        blur = True
-                        auxControlBLur = False
-                else:
-                    auxControlBLur = True
+                    # Gesture attivazione blur
+                    if fingersR == [0, 1, 1, 1, 1]:
+                        if blur and auxControlBLur:
+                            blur = False
+                            auxControlBLur = False
+                        elif blur == False and auxControlBLur:
+                            blur = True
+                            auxControlBLur = False
+                    else:
+                        auxControlBLur = True
 
 
                 if cyR <= gestureThreshold:
@@ -266,28 +270,30 @@ def main():
                                 colorArray = [[]]
                                 annotationCounter = 0
             if leftHand:
-                # Gesture attivazione camera
-                if fingersL == [1, 0, 0, 0, 1]:
-                    print("disattivo camera", camera)
-                    if camera and auxControlCamera:
-                        camera = False
-                        auxControlCamera = False
-                    elif camera == False and auxControlCamera:
-                        camera = True
-                        auxControlCamera = False
-                else:
-                    auxControlCamera = True
+                if len(hands) == 1:
+                    # Gesture attivazione camera
+                    if fingersL == [1, 0, 0, 0, 1]:
+                        print("disattivo camera", camera)
+                        if camera and auxControlCamera:
+                            camera = False
+                            auxControlCamera = False
+                        elif camera == False and auxControlCamera:
+                            camera = True
+                            auxControlCamera = False
+                    else:
+                        auxControlCamera = True
 
-                # Gesture attivazione blur
-                if fingersL == [0, 1, 1, 1, 1]:
-                    if blur and auxControlBLur:
-                        blur = False
-                        auxControlBLur = False
-                    elif blur == False and auxControlBLur:
-                        blur = True
-                        auxControlBLur = False
-                else:
-                    auxControlBLur = True
+                    # Gesture attivazione blur
+                    if camera:
+                        if fingersL == [0, 1, 1, 1, 1]:
+                            if blur and auxControlBLur:
+                                blur = False
+                                auxControlBLur = False
+                            elif blur == False and auxControlBLur:
+                                blur = True
+                                auxControlBLur = False
+                        else:
+                            auxControlBLur = True
 
                 if cyL <= gestureThreshold:
                     annotationStart = False
@@ -611,17 +617,31 @@ def main():
                 print('zona: ', 6)
                 zoomedImg = imgCurrent[haux-720:haux, int(scale * cx) - 640: int(scale * cx) + 640]
 
+        #conservo una copia della camera per non mettere il blur sulla camera delle istruzioni
+        #auxCamera = img
 
-        if blur:
-            img = backgroundRemoval.blurBackground(img, 9)
+        #inserisco il blur
+        #if blur:
+        #    img = backgroundRemoval.blurBackground(img, 9)
 
         # 2) Aggiungo la webcam nella schermata delle slide
-        camWindow = cv2.resize(img, (wSmall, hSmall))
+        #camWindow = cv2.resize(clearImg, (wSmall, hSmall))
 
+        #ridimensiono l'immagine pulita per inserirla nelle slide
+        clearImg = cv2.resize(clearImg, (wSmall, hSmall))
+
+        #inserisco il blur se attivo
+        if blur:
+            clearImg = backgroundRemoval.blurBackground(clearImg, 11)
+
+
+        #creazione interfaccia webcam con indicatori e info sui comandi
         imgSupport = np.concatenate((cv2.resize(img, (910, 512)), tutorial), axis=1)
         cv2.imshow("Gestures tutorial", imgSupport)
 
         #############creazione interfaccia utente##############
+
+
         backgroundImg = cv2.imread("image/background.jpg")
         checkedIcon = cv2.imread("image/checked.png")
         checkedIcon = cv2.resize(checkedIcon, (25, 25))
@@ -631,7 +651,7 @@ def main():
 
         #inserisco la cam in alto a destra
         if camera:
-            backgroundImg[30:hSmall + 30, 30:wSmall + 30] = camWindow
+            backgroundImg[30:hSmall + 30, 30:wSmall + 30] = clearImg
 
 
         #ridimensiono l'immagine della slide per inserirla nel mio progetto
@@ -719,8 +739,8 @@ def main():
         elif cv2.getWindowProperty("Presentation", cv2.WND_PROP_VISIBLE) < 1:
             closureController.closingApp()
             #break
-        elif cv2.getWindowProperty("Gestures tutorial", cv2.WND_PROP_VISIBLE) < 1:
-            closureController.closingApp()
+        # elif cv2.getWindowProperty("Gestures tutorial", cv2.WND_PROP_VISIBLE) < 1:
+        #     closureController.closingApp()
             #break
 
     cv2.destroyAllWindows()

@@ -3,7 +3,7 @@ import os
 from os.path import exists
 from PIL import Image
 import ctypes
-import presentationController
+import presentationControllerV2
 
 
 tempDir = "temp/"
@@ -16,7 +16,7 @@ nameOfPdf = None
 
 #serve per creare le nuove immagini con gli appunti inseriti sopra
 def addNote():
-    arrayNote = presentationController.dictOfAnnotations
+    arrayNote = presentationControllerV2.dictOfAnnotations
     print(arrayNote)
     count = 0
     for image in os.listdir(tempDir):
@@ -26,12 +26,13 @@ def addNote():
         print("salvataggio nuova foto")
         imgCurrent = cv2.imread(tempDir + 'out_img' + str(aux) + '.jpg')
         if aux-1 in arrayNote:
-            note = arrayNote[aux - 1]['annotasions']
+            note = arrayNote[aux - 1]['annotations']
+            color = arrayNote[aux - 1]['cColor']
             print(note)
             for i in range(len(note)):
                 for j in range(len(note[i])):
                     if j != 0:
-                        imgCurrent = cv2.line(imgCurrent, note['annotasions'][i][j - 1], note['annotasions'][i][j], note['cColor'][i][j-1], 5)
+                        imgCurrent = cv2.line(imgCurrent, note[i][j - 1], note[i][j], color[i][j-1], 5)
         cv2.imwrite(tempSavedDir + 'out_img' + str(aux) + '.jpg', imgCurrent)
         aux += 1
     jpg2pdf(nameOfPdf)
