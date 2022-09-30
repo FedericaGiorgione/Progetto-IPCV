@@ -207,30 +207,6 @@ def main():
             # GESTURE A UNA MANO
 
             if rightHand:
-                if len(hands) == 1:
-                    # Gesture attivazione camera
-                    if fingersR == [1, 0, 0, 0, 1]:
-                        print("disattivo camera", camera)
-                        if camera and auxControlCamera:
-                            camera = False
-                            auxControlCamera = False
-                        elif camera == False and auxControlCamera:
-                            camera = True
-                            auxControlCamera = False
-                    else:
-                        auxControlCamera = True
-
-                    # Gesture attivazione blur
-                    if fingersR == [0, 1, 1, 1, 1]:
-                        if blur and auxControlBLur:
-                            blur = False
-                            auxControlBLur = False
-                        elif blur == False and auxControlBLur:
-                            blur = True
-                            auxControlBLur = False
-                    else:
-                        auxControlBLur = True
-
 
                 if cyR <= gestureThreshold:
                     annotationStart = False
@@ -269,32 +245,27 @@ def main():
                                 annotations = [[]]
                                 colorArray = [[]]
                                 annotationCounter = 0
-            if leftHand:
-                if len(hands) == 1:
+
                     # Gesture attivazione camera
-                    if fingersL == [1, 0, 0, 0, 1]:
+                    if fingersR == [1, 0, 0, 0, 1]:
                         print("disattivo camera", camera)
-                        if camera and auxControlCamera:
+                        if camera:
                             camera = False
-                            auxControlCamera = False
-                        elif camera == False and auxControlCamera:
+                            buttonPressed = True
+                        elif camera == False:
                             camera = True
-                            auxControlCamera = False
-                    else:
-                        auxControlCamera = True
+                            buttonPressed = True
 
                     # Gesture attivazione blur
                     if camera:
-                        if fingersL == [0, 1, 1, 1, 1]:
-                            if blur and auxControlBLur:
+                        if fingersR == [0, 1, 1, 1, 1]:
+                            if blur:
                                 blur = False
-                                auxControlBLur = False
-                            elif blur == False and auxControlBLur:
+                                buttonPressed = True
+                            elif blur == False:
                                 blur = True
-                                auxControlBLur = False
-                        else:
-                            auxControlBLur = True
-
+                                buttonPressed = True
+            if leftHand:
                 if cyL <= gestureThreshold:
                     annotationStart = False
 
@@ -325,6 +296,26 @@ def main():
                             annotations = [[]]
                             colorArray = [[]]
                             annotationCounter = 0
+
+                    # Gesture attivazione camera
+                    if fingersL == [1, 0, 0, 0, 1]:
+                        print("disattivo camera", camera)
+                        if camera:
+                            camera = False
+                            buttonPressed = True
+                        elif camera == False:
+                            camera = True
+                            buttonPressed = True
+
+                    # Gesture attivazione blur
+                    if camera:
+                        if fingersL == [0, 1, 1, 1, 1]:
+                            if blur:
+                                blur = False
+                                buttonPressed = True
+                            elif blur == False:
+                                blur = True
+                                buttonPressed = True
 
             # Gesture 3 - Puntatore (indice)
             if rightHand and fingersR == [0, 1, 0, 0, 0]:
@@ -468,7 +459,7 @@ def main():
                             buttonPressed = True
 
                 # Gesture 6 - Cancella tutti i disegni (entrmabi le amni aperte)
-                if fingersL == [1, 1, 1, 1, 1] and fingersR == [1, 1, 1, 1, 1]:
+                if fingersL == [1, 1, 1, 1, 1] and fingersR == [1, 1, 1, 1, 1] and cyR<=gestureThreshold and cyR<=gestureThreshold:
                     if annotations:
                         if annotationCounter > 0:
                             annotations = [[]]
@@ -644,9 +635,9 @@ def main():
 
         backgroundImg = cv2.imread("image/background.jpg")
         checkedIcon = cv2.imread("image/checked.png")
-        checkedIcon = cv2.resize(checkedIcon, (25, 25))
+        #checkedIcon = cv2.resize(checkedIcon, (25, 25))
         uncheckedIcon = cv2.imread("image/unchecked.png")
-        uncheckedIcon = cv2.resize(uncheckedIcon, (25, 25))
+        #uncheckedIcon = cv2.resize(uncheckedIcon, (25, 25))
 
 
         #inserisco la cam in alto a destra
