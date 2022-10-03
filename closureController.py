@@ -3,7 +3,7 @@ import os
 from os.path import exists
 from PIL import Image
 import ctypes
-import presentationControllerV2
+import presentationController
 
 
 tempDir = "temp/"
@@ -16,7 +16,7 @@ nameOfPdf = None
 
 #serve per creare le nuove immagini con gli appunti inseriti sopra
 def addNote():
-    arrayNote = presentationControllerV2.dictOfAnnotations
+    arrayNote = presentationController.dictOfAnnotations
     print(arrayNote)
     count = 0
     for image in os.listdir(tempDir):
@@ -32,7 +32,7 @@ def addNote():
             for i in range(len(note)):
                 for j in range(len(note[i])):
                     if j != 0:
-                        imgCurrent = cv2.line(imgCurrent, note[i][j - 1], note[i][j], color[i][j-1], 5)
+                        imgCurrent = cv2.line(imgCurrent, note[i][j - 1], note[i][j], color[i][j], 5)
         cv2.imwrite(tempSavedDir + 'out_img' + str(aux) + '.jpg', imgCurrent)
         aux += 1
     jpg2pdf(nameOfPdf)
@@ -70,7 +70,6 @@ def jpg2pdf(pdf=nameOfPdf):
 
 #funzione invocata se si decide di salvare
 def savedSlide():
-    #jpg2pdf()
     addNote()
     for file_name in os.listdir(tempDir):
         file = tempDir + file_name
@@ -89,7 +88,6 @@ def savedSlide():
 
 #funzione invocata se si decide di non salvare, elimina le immagini temporanee che avevamo creato
 def deleteAllTmpFile():
-    #path = r"E:\demos\files\reports\\"
     for file_name in os.listdir(tempDir):
         # construct full file path
         file = tempDir + file_name

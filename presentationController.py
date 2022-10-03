@@ -1,23 +1,30 @@
-# gestureThreshold modificabile
-# salvare le note sulla singola pagina (rendere annotations una lista tripa, ovvero pagina->annotazione->punto)
-# cambiare colore per disegnare
-
 import os
 import cv2
 from cvzone.HandTrackingModule import HandDetector
 import numpy as np
 import os
-import closureController
 
+import backgroundRemoval
+import closureController
+import numpy as np
+
+tempDir = "temp/"
 dictOfAnnotations = {}
+
+def countNumberOfPages():
+    count = 0
+    for image in os.listdir(tempDir):
+        count += 1
+    return count
+
+
 
 def main():
     # ---------VARIABILI---------
 
     width = 1280
     height = 720
-    folderPath = "Slides\\"
-    #folderPath = "temp\\"
+    folderPath = "temp\\"
     imgCount = 0
 
     n, m = 1, 1  # moltiplicatori per la dimensione delle slide
@@ -39,7 +46,32 @@ def main():
     annotations = [[]]
     annotationCounter = 0  # indice di disegno (altrimenti viene disegnata una linea tra ogni disegno)
     annotationStart = False  # flag per far partire un nuovo disegno
-    cColor = (0, 0, 255)  # colore di disegno corrente
+    colorArray = [[]]
+
+
+    #########################colori######################################
+    black = (0, 0, 0)
+    white = (255, 255, 255)
+    red = (0, 0, 255)
+    blue = (255, 0, 0)
+
+    cColor = red  # colore di disegno corrente
+
+    blackIcon = cv2.imread("image/black.png")
+    blackIcon = cv2.resize(blackIcon, None, fx=0.2, fy=0.2)
+    whiteIcon = cv2.imread("image/white.png")
+    whiteIcon = cv2.resize(whiteIcon, None, fx=0.2, fy=0.2)
+    redIcon = cv2.imread("image/red.png")
+    redIcon = cv2.resize(redIcon, None, fx=0.2, fy=0.2)
+    blueIcon = cv2.imread("image/blue.png")
+    blueIcon = cv2.resize(blueIcon, None, fx=0.2, fy=0.2)
+
+    tutorial = cv2.imread("image\\tutorial.png")
+
+    changeColor = True
+
+    ###############################################################################
+
 
     n, m = 1, 1  # moltiplicatori per la dimensione delle slide
     # serve per salvare la distanza inziale fra le dita prima dello zoom
@@ -66,13 +98,38 @@ def main():
     # prendo la lista delle immagini
     pathImgs = sorted(os.listdir(folderPath), key=len)  # ordino per linghezza così non ho problemi con le decine
 
+    #variabile conteggio pagine
+    auxCountPages = True
+    numbersOfPages = 0
+
+    #cinteggio numero note
+    countNumber = 0
+    auxCountNumber = True
+
+    #booleani per visualizzazione camera e blur camera
+    camera = True
+    blur = False
+
+
+    auxControlCamera = True
+    auxControlBLur = True
+
     while True:
+
+        #conto il numero totale di pagine presenti
+        if auxCountPages:
+            numbersOfPages = countNumberOfPages()
+            auxCountPages = False
+
+
         # Importo le immagini
         success, img = cap.read()
         img = cv2.flip(img, 1)
         pathFullImgs = os.path.join(folderPath, pathImgs[imgCount])
         imgCurrent = cv2.imread(pathFullImgs)
-        # imgCurrent = cv2.resize(imgCurrent, (width, height))  # resize a dimensione fissa
+
+        #conservo la camera pulita
+        success2, clearImg = cap.read()
 
         # Rileva le mani
         hands, img = detector.findHands(img)
@@ -134,6 +191,7 @@ def main():
             # GESTURE A UNA MANO
 
             if rightHand:
+
                 if cyR <= gestureThreshold:
                     annotationStart = False
 
@@ -146,8 +204,9 @@ def main():
                             scale = 1
                             imgCount -= 1
                             if imgCount in dictOfAnnotations:
-                                annotations = dictOfAnnotations[imgCount]
-                                annotationCounter = len(dictOfAnnotations[imgCount])-1
+                                annotations = dictOfAnnotations[imgCount]['annotations']
+                                colorArray = dictOfAnnotations[imgCount]['cColor']
+                                annotationCounter = len(dictOfAnnotations[imgCount]['annotations'])-1
                             else:
                                 annotations = [[]]
                                 annotationCounter = 0
@@ -163,14 +222,37 @@ def main():
                             imgCount += 1
 
                             if imgCount in dictOfAnnotations:
-                                annotations = dictOfAnnotations[imgCount]
-                                annotationCounter = len(dictOfAnnotations[imgCount]) - 1
+                                annotations = dictOfAnnotations[imgCount]['annotations']
+                                colorArray = dictOfAnnotations[imgCount]['cColor']
+                                annotationCounter = len(dictOfAnnotations[imgCount]['annotations']) - 1
                             else:
                                 annotations = [[]]
+                                colorArray = [[]]
                                 annotationCounter = 0
+
+                    # Gesture attivazione camera
+                    if fingersR == [1, 0, 0, 0, 1]:
+                        print("disattivo camera", camera)
+                        if camera:
+                            camera = False
+                            buttonPressed = True
+                        elif camera == False:
+                            camera = True
+                            buttonPressed = True
+
+                    # Gesture attivazione blur
+                    if camera:
+                        if fingersR == [0, 1, 1, 1, 1]:
+                            if blur:
+                                blur = False
+                                buttonPressed = True
+                            elif blur == False:
+                                blur = True
+                                buttonPressed = True
             if leftHand:
                 if cyL <= gestureThreshold:
                     annotationStart = False
+
 
                     # Gesture 1 - sinistra (pollice)
                     if fingersL == [1, 0, 0, 0, 0]:
@@ -183,6 +265,7 @@ def main():
                             imgCount -= 1
 
                             annotations = [[]]
+                            colorArray = [[]]
                             annotationCounter = 0
 
                     # Gesture 2 - destra (mignolo)
@@ -195,7 +278,28 @@ def main():
                             scale = 1
                             imgCount += 1
                             annotations = [[]]
+                            colorArray = [[]]
                             annotationCounter = 0
+
+                    # Gesture attivazione camera
+                    if fingersL == [1, 0, 0, 0, 1]:
+                        print("disattivo camera", camera)
+                        if camera:
+                            camera = False
+                            buttonPressed = True
+                        elif camera == False:
+                            camera = True
+                            buttonPressed = True
+
+                    # Gesture attivazione blur
+                    if camera:
+                        if fingersL == [0, 1, 1, 1, 1]:
+                            if blur:
+                                blur = False
+                                buttonPressed = True
+                            elif blur == False:
+                                blur = True
+                                buttonPressed = True
 
             # Gesture 3 - Puntatore (indice)
             if rightHand and fingersR == [0, 1, 0, 0, 0]:
@@ -203,7 +307,7 @@ def main():
                 cLocY = int(pLocY + (indexFingerR[1] - pLocY) / smoothening)
                 indexFingerR = cLocX, cLocY
 
-                cv2.circle(imgCurrent, indexFingerR, 8, (0, 0, 255), cv2.FILLED)
+                cv2.circle(imgCurrent, indexFingerR, 8, cColor, cv2.FILLED)
                 #annotationStart = False
 
                 pLocX, pLocY = cLocX, cLocY
@@ -212,10 +316,11 @@ def main():
                 cLocY = int(pLocY + (indexFingerL[1] - pLocY) / smoothening)
                 indexFingerL = cLocX, cLocY
 
-                cv2.circle(imgCurrent, indexFingerL, 8, (0, 0, 255), cv2.FILLED)
+                cv2.circle(imgCurrent, indexFingerL, 8, cColor, cv2.FILLED)
                 #annotationStart = False
 
                 pLocX, pLocY = cLocX, cLocY
+
 
             # GESTURE A DUE MANI
 
@@ -230,12 +335,14 @@ def main():
                         annotationStart = True
                         annotationCounter += 1
                         annotations.append([])  # inizio un nuovo disegno
+                        colorArray.append([])
                         dictOfAnnotations[imgCount] = []
 
-                    cv2.circle(imgCurrent, indexFingerR, 8, (0, 0, 255), cv2.FILLED)
+                    cv2.circle(imgCurrent, indexFingerR, 8, cColor, cv2.FILLED)
                     annotations[annotationCounter].append(indexFingerR)
-                    dictOfAnnotations[imgCount] = annotations
-
+                    colorArray[annotationCounter].append(cColor)
+                    dictOfAnnotations[imgCount] = {'annotations':annotations, 'cColor':colorArray}
+                    print(dictOfAnnotations)
 
                     pLocX, pLocY = cLocX, cLocY
 
@@ -248,11 +355,13 @@ def main():
                         annotationStart = True
                         annotationCounter += 1
                         annotations.append([])  # inizio un nuovo disegno
+                        colorArray.append([])
                         dictOfAnnotations[imgCount] = annotations
 
-                    cv2.circle(imgCurrent, indexFingerL, 8, (0, 0, 255), cv2.FILLED)
+                    cv2.circle(imgCurrent, indexFingerL, 8, cColor, cv2.FILLED)
                     annotations[annotationCounter].append(indexFingerL)
-                    dictOfAnnotations[imgCount] = annotations
+                    colorArray[annotationCounter].append(cColor)
+                    dictOfAnnotations[imgCount] = {'annotations':annotations, 'cColor':colorArray}
 
                     pLocX, pLocY = cLocX, cLocY
                 else:
@@ -263,25 +372,29 @@ def main():
                     if annotations:
                         if annotationCounter >= 0:
                             annotations.pop(-1)
+                            colorArray.pop(-1)
                             annotationCounter -= 1
-                            dictOfAnnotations[imgCount] = annotations
+                            dictOfAnnotations[imgCount] = {'annotations':annotations, 'cColor':colorArray}
+
                             buttonPressed = True
 
                 if fingersL == [1, 1, 1, 0, 0] and fingersR == [1, 1, 1, 1, 1]:
                     if annotations:
                         if annotationCounter >= 0:
                             annotations.pop(-1)
+                            colorArray.pop(-1)
                             annotationCounter -= 1
-                            dictOfAnnotations[imgCount] = annotations
+                            dictOfAnnotations[imgCount] = {'annotations':annotations, 'cColor':colorArray}
                             buttonPressed = True
 
                 # Gesture 6 - Cancella tutti i disegni (entrmabi le amni aperte)
-                if fingersL == [1, 1, 1, 1, 1] and fingersR == [1, 1, 1, 1, 1]:
+                if fingersL == [1, 1, 1, 1, 1] and fingersR == [1, 1, 1, 1, 1] and cyR<=gestureThreshold and cyR<=gestureThreshold:
                     if annotations:
                         if annotationCounter > 0:
                             annotations = [[]]
+                            colorArray = [[]]
                             annotationCounter = 0
-                            dictOfAnnotations[imgCount] = annotations
+                            dictOfAnnotations[imgCount] = {'annotations':annotations, 'cColor':colorArray}
                             buttonPressed = True
 
                 # Gesture 7 - Zoom
@@ -296,11 +409,25 @@ def main():
                         scale = 4
                     elif scale < 1:
                         scale = 1
-                    # conserviamo il punto centrale della distanza fra gli indici
-                    # cx, cy = info[4:]
-                    #print("fattore di scala: ", scale)
 
-            # Gesture 8 - Movimento nell'immagine scalata
+                # Gesture 8 - Cambio colore delle note
+                if (fingersR == [1, 1, 1, 1, 1] and fingersL == [0, 1, 1, 1, 1]) or \
+                        (fingersL == [1, 1, 1, 1, 1] and fingersR == [0, 1, 1, 1, 1]):
+                    print("cambio colore")
+                    if changeColor:
+                        changeColor = False
+                        if cColor == red:
+                            cColor = blue
+                        elif cColor == blue:
+                            cColor = black
+                        elif cColor == black:
+                            cColor = white
+                        elif cColor == white:
+                            cColor = red
+                else:
+                    changeColor = True
+
+            # Gesture 9 - Movimento nell'immagine scalata
             if scale>1:
                 if fingersR == [1, 1, 0, 0, 0]:
                     cx, cy, = lmListR[8][0], lmListR[8][1]
@@ -318,32 +445,27 @@ def main():
                 buttonCounter = 0
                 buttonPressed = False
 
-        for i in range(len(annotations)):
-            for j in range(len(annotations[i])):
-                if j != 0:
-                    #print(annotationCounter, ' e ', annotations[i][j])
-                    cv2.line(imgCurrent, annotations[i][j - 1], annotations[i][j], cColor,
-                             5)  # disegna una linea tra ogni punto
 
         if len(dictOfAnnotations) != 0:
             if imgCount in dictOfAnnotations:
                 note = dictOfAnnotations[imgCount]
-                for i in range(len(note)):
-                    for j in range(len(note[i])):
+                for i in range(len(note['annotations'])):
+                    for j in range(len(note['annotations'][i])):
                         if j != 0:
                             # print(annotationCounter, ' e ', annotations[i][j])
-                            cv2.line(imgCurrent, note[i][j - 1], note[i][j], cColor,
+                            cv2.line(imgCurrent, note['annotations'][i][j - 1], note['annotations'][i][j], note['cColor'][i][j],
                                      5)  # disegna una linea tra ogni punto
 
+        #contiene l'immagine attuale, potrebbe essere scalato se applichiamo lo zoom
         imgCurrent = cv2.resize(imgCurrent, None, fx=scale, fy=scale)
 
+        #prendiamo solo la porzione centrale dell'immagine quando zoomiamo
         haux, waux, _ = imgCurrent.shape
         zoomedImg = imgCurrent[haux//2-360:haux//2+360, waux//2-640:waux//2+640]
 
-        #print('haux= ', haux, 'waux= ',  waux)
+
+        #se l'immagine è scalata dobbiamo fare i controlli se prendiamo una porzione non della dimensione che ci serve
         if cx != None:
-            #print('cx s= ', cx * scale, 'cy s= ', cy * scale)
-            #530 > 640
             if scale*cx > waux/4 and scale*cx < 3/4*waux and scale*cy > haux/4 and scale*cy < 3/4*haux:  # zona 9
                 print('zona: ', 9)
                 padY = int(cy * scale) - 360
@@ -404,19 +526,107 @@ def main():
                 print('zona: ', 6)
                 zoomedImg = imgCurrent[haux-720:haux, int(scale * cx) - 640: int(scale * cx) + 640]
 
-        # 2) Aggiungo la webcam nella schermata delle slide
-        imageSmall = cv2.resize(img, (wSmall, hSmall))
-        #h, w, _ = imgCurrent.shape
-        h, w, _ = zoomedImg.shape
-        #print(zoomedImg.shape)
-        #print('scale: ', scale)
-        zoomedImg[0:hSmall, w - wSmall:w] = imageSmall
 
-        imgCurrent = cv2.resize(zoomedImg, None, fx=1, fy=1)
-        imgCurrent[0:, 0:] = zoomedImg
+        #ridimensiono l'immagine pulita per inserirla nelle slide
+        clearImg = cv2.resize(clearImg, (wSmall, hSmall))
 
-        cv2.imshow("Image", img)
-        cv2.imshow("Presentation", imgCurrent)
+        #inserisco il blur se attivo
+        if blur:
+            clearImg = backgroundRemoval.blurBackground(clearImg, 11)
+
+
+        #creazione interfaccia webcam con indicatori e info sui comandi
+        imgSupport = np.concatenate((cv2.resize(img, (910, 512)), tutorial), axis=1)
+        cv2.imshow("Gestures tutorial", imgSupport)
+
+        #############creazione interfaccia utente##############
+
+
+        backgroundImg = cv2.imread("image/background.jpg")
+        checkedIcon = cv2.imread("image/checked.png")
+        uncheckedIcon = cv2.imread("image/unchecked.png")
+
+
+        #inserisco la cam in alto a destra
+        if camera:
+            backgroundImg[30:hSmall + 30, 30:wSmall + 30] = clearImg
+
+
+        #ridimensiono l'immagine della slide per inserirla nel mio progetto
+        resizedImg = cv2.resize(zoomedImg, None, fx=0.7, fy=0.7)
+        auxY, auxX, _ = resizedImg.shape
+
+        # inserimento immagine slide
+        backgroundImg[100:auxY + 100, 300:auxX + 300] = resizedImg
+
+
+        #inserimento switch camera
+        if camera:
+            checkY, checkX, _ = checkedIcon.shape
+            backgroundImg[hSmall + 222: hSmall + checkY + 222, 60: 60+checkX] = checkedIcon
+        else:
+            checkY, checkX, _ = uncheckedIcon.shape
+            backgroundImg[hSmall + 222: hSmall + checkY + 222, 60: 60 + checkX] = uncheckedIcon
+
+
+        cv2.putText(backgroundImg, text='Camera', org=(100, hSmall + 242),
+                    fontFace=cv2.FONT_HERSHEY_TRIPLEX, fontScale=0.8, color=(255, 255, 255), thickness=1)
+
+
+        # inserimento switch blur
+        if camera and blur:
+            checkY, checkX, _ = checkedIcon.shape
+            backgroundImg[hSmall + 267: hSmall + checkY + 267, 60: 60 + checkX] = checkedIcon
+        else:
+            checkY, checkX, _ = uncheckedIcon.shape
+            backgroundImg[hSmall + 267: hSmall + checkY + 267, 60: 60 + checkX] = uncheckedIcon
+
+        cv2.putText(backgroundImg, text='Blur Camera', org=(100, hSmall + 287),
+                    fontFace=cv2.FONT_HERSHEY_TRIPLEX, fontScale=0.8, color=(255, 255, 255), thickness=1)
+
+
+
+        # inserimento colori e bordo nel colore attivo
+        grey = (128, 128, 128)
+        if cColor == red:
+            # inserisco il bordo nel colore attivo
+            activeColor = cv2.copyMakeBorder(redIcon, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=grey)
+            backgroundImg[hSmall + 50: hSmall + 121, 50: 121] = activeColor
+        else:
+            backgroundImg[hSmall + 60: hSmall + 111, 60: 111] = redIcon
+
+        if cColor == blue:
+            # inserisco il bordo nel colore attivo
+            activeColor = cv2.copyMakeBorder(blueIcon, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=grey)
+            backgroundImg[hSmall + 50: hSmall + 121, wSmall - 51: wSmall + 20] = activeColor
+        else:
+            backgroundImg[hSmall + 60: hSmall + 111, wSmall - 41: wSmall + 10] = blueIcon
+
+        if cColor == black:
+            # inserisco il bordo nel colore attivo
+            activeColor = cv2.copyMakeBorder(blackIcon, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=grey)
+            backgroundImg[hSmall + 131: hSmall + 202, 50: 121] = activeColor
+        else:
+            backgroundImg[hSmall + 141: hSmall + 192, 60: 111] = blackIcon
+
+        if cColor == white:
+            # inserisco il bordo nel colore attivo
+            activeColor = cv2.copyMakeBorder(whiteIcon, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=grey)
+            backgroundImg[hSmall + 131: hSmall + 202, wSmall - 51: wSmall + 20] = activeColor
+        else:
+            backgroundImg[hSmall + 141: hSmall + 192, wSmall - 41: wSmall + 10] = whiteIcon
+
+
+        #inserisco il numero della slide e il totale numero di slides presenti
+        cv2.putText(backgroundImg, text=str(imgCount+1) + '/' + str(numbersOfPages), org=(1100, 80), fontFace=cv2.FONT_HERSHEY_TRIPLEX, fontScale=1, color=(255, 255, 255),thickness=2)
+
+
+
+        #configurazione finestra a schermo intero (con barra sopra presente)
+        cv2.namedWindow("Presentation", cv2.WND_PROP_FULLSCREEN)
+
+        #visualizzazione schermata applicazione
+        cv2.imshow("Presentation", backgroundImg)
 
         key = cv2.waitKey(1)
 
@@ -427,11 +637,6 @@ def main():
         elif cv2.getWindowProperty("Presentation", cv2.WND_PROP_VISIBLE) < 1:
             closureController.closingApp()
             #break
-        elif cv2.getWindowProperty("Image", cv2.WND_PROP_VISIBLE) < 1:
-            closureController.closingApp()
-            #break
-
-
 
     cv2.destroyAllWindows()
 

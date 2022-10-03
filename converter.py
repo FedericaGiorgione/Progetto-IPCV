@@ -4,7 +4,7 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import filedialog
 import os
-import  presentationControllerV2
+import  presentationController
 from pdfrw import PdfReader
 import  closureController
 
@@ -21,18 +21,6 @@ nameOfPdf = None
 
 #funzione per convertire il pdf in immagine
 def pdf2jpg():
-    # pdf = PdfReader(enter_path.get())
-    # x0, y0, x1, y1 = pdf.pages[0].MediaBox
-    # x0 = float(x0)
-    # x1 = float(x1)
-    # y0 = float(y0)
-    # y1 = float(y1)
-    # width = x1 - x0
-    # height = y1 - y0
-    #
-    # width = int(width)
-    # height = int(height)
-    #print("dimensione pagina: ", width, height)
     try:
         pages = convert_from_path(pdf_path=str(enter_path.get()), dpi=200, poppler_path=poppler_path,
                                   size=(1280, 720))
@@ -52,7 +40,7 @@ def pdf2jpg():
         if messagebox.showinfo("Result", Result):
             #avviamo le slide
             root.destroy()
-            presentationControllerV2.main()
+            presentationController.main()
 
 
 
