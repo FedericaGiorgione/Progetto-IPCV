@@ -241,14 +241,15 @@ def main():
                             buttonPressed = True
 
                     # Gesture attivazione blur
-                    if camera:
-                        if fingersR == [0, 1, 1, 1, 1]:
-                            if blur:
-                                blur = False
-                                buttonPressed = True
-                            elif blur == False:
-                                blur = True
-                                buttonPressed = True
+                    if len(hands) == 1:
+                        if camera:
+                            if fingersR == [0, 1, 1, 1, 1]:
+                                if blur:
+                                    blur = False
+                                    buttonPressed = True
+                                elif blur == False:
+                                    blur = True
+                                    buttonPressed = True
             if leftHand:
                 if cyL <= gestureThreshold:
                     annotationStart = False
@@ -292,14 +293,15 @@ def main():
                             buttonPressed = True
 
                     # Gesture attivazione blur
-                    if camera:
-                        if fingersL == [0, 1, 1, 1, 1]:
-                            if blur:
-                                blur = False
-                                buttonPressed = True
-                            elif blur == False:
-                                blur = True
-                                buttonPressed = True
+                    if len(hands) == 1:
+                        if camera:
+                            if fingersL == [0, 1, 1, 1, 1]:
+                                if blur:
+                                    blur = False
+                                    buttonPressed = True
+                                elif blur == False:
+                                    blur = True
+                                    buttonPressed = True
 
             # Gesture 3 - Puntatore (indice)
             if rightHand and fingersR == [0, 1, 0, 0, 0]:
